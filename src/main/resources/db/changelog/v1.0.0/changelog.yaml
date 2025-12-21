@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: 20251129-00-0-create-board-table.sql
+      relativeToChangelogFile: true
