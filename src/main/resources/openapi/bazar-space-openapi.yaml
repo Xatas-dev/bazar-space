@@ -1,0 +1,123 @@
+openapi: 3.1.0
+info:
+  title: Bazar space openapi
+  version: v0
+servers:
+  - url: http://localhost:8080/api
+    description: Generated server url
+paths:
+  /space:
+    get:
+      tags:
+        - space-admin-controller
+      operationId: getAllUserSpaces
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/GetUserSpacesDtoResponse"
+    post:
+      tags:
+        - space-admin-controller
+      operationId: createSpace
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: integer
+                format: int64
+  /space/user:
+    post:
+      tags:
+        - space-controller
+      operationId: addUserToSpace
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddUserToSpaceDtoRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+  /space/{spaceId}/user:
+    get:
+      tags:
+        - space-controller
+      operationId: getAllUsersInSpace
+      parameters:
+        - name: spaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+  /space/{spaceId}:
+    delete:
+      tags:
+        - space-admin-controller
+      operationId: deleteSpace
+      parameters:
+        - name: spaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+  /space/{spaceId}/user/{userId}:
+    delete:
+      tags:
+        - space-controller
+      operationId: deleteUserFromSpace
+      parameters:
+        - name: spaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    AddUserToSpaceDtoRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        spaceId:
+          type: integer
+          format: int64
+    GetUserSpacesDtoResponse:
+      type: object
+      properties:
+        spaceIds:
+          type: array
+          items:
+            type: integer
+            format: int64

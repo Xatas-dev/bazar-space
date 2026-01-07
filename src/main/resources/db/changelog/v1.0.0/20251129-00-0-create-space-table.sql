@@ -3,8 +3,8 @@
 --description Create table space
 create table space(
     id bigserial primary key,
-    created_at timestamp not null default now(),
-    updated_at timestamp not null default now()
+    created_at timestamp with time zone not null default now(),
+    updated_at timestamp with time zone not null default now()
 );
 
 comment on column space.id IS 'Id space';

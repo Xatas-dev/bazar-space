@@ -5,8 +5,8 @@ create table user_space(
     id bigserial primary key,
     space_id bigint references space(id) not null,
     user_id uuid not null,
-    created_at timestamp not null default now(),
-    updated_at timestamp not null default now()
+    created_at timestamp with time zone not null default now(),
+    updated_at timestamp with time zone not null default now()
 );
 
 alter table user_space

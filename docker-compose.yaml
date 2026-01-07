@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. Your Spring Boot Application
+  # ==========================================
+  app:
+    image: org.bazar/bazar-authorization:small
+    container_name: bazar-authorization
+    ports:
+      - "9090:9090"
+    environment:
+      # Networking: Notice we use service names (postgres, keycloak) not localhost
+      - DB_URL=jdbc:postgresql://postgres:5432/bzrauthz
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      # Internal Docker URL for backend-to-backend communication
+      - KC_URL=http://keycloak:8080
+      - KC_EXTERNAL_URL=http://localhost:9999
+      - KC_REALM=bazar-realm
+      # Cerbos gRPC connection
+      - CERBOS_URL=dns:///cerbos:3593
+      - LOGGING_LEVEL=DEBUG
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cerbos:
+        condition: service_started
+    networks:
+      - bazar-net
+
+  # ==========================================
+  # 2. PostgreSQL (Shared by App & Keycloak)
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: bazar-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      # We don't specify ONE db here, we use the init.sql to create TWO
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bazar-net
+
+  # ==========================================
+  # 3. Keycloak (Identity Provider)
+  # ==========================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: bazar-keycloak
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "9999:8080" # Exposed on port 8081 to avoid conflict with Spring Boot
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bazar-net
+
+  # ==========================================
+  # 4. Cerbos (Authorization)
+  # ==========================================
+  cerbos:
+    image: ghcr.io/cerbos/cerbos:latest
+    container_name: bazar-cerbos
+    ports:
+      - "3592:3592" # HTTP
+      - "3593:3593" # gRPC
+    volumes:
+      # Map your local policies folder to the container
+      - /home/ssc/IdeaProjects/shared-configs/cerbos/policies:/policies
+    networks:
+      - bazar-net
+
+volumes:
+  postgres_data:
+
+networks:
+  bazar-net:
+    driver: bridge

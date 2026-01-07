@@ -1,4 +1,4 @@
-package org.bazar.space.config.security
+package org.bazar.space.config.web.security
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

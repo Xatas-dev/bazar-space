@@ -13,9 +13,9 @@ spring:
         address: static://localhost:9090
   security:
     oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:9999/realms/bazar-realm
+        resourceserver:
+          jwt:
+            issuer-uri: http://localhost:9999/realms/bazar-realm
 server:
   servlet:
     context-path: /api
