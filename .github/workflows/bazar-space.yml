@@ -9,7 +9,7 @@ on:
     paths:
       - 'bazar-space/**'
       - '.github/workflows/bazar-space.yml'
-
+  workflow_dispatch:
 env:
   SERVICE_CONTEXT: ./bazar-space
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/bazar-space
