@@ -29,6 +29,7 @@ val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     // Mockito agent fix
     testImplementation("org.mockito:mockito-core:5.20.0")
     mockitoAgent("org.mockito:mockito-core:5.20.0") { isTransitive = false }
