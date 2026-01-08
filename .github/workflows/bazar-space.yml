@@ -5,10 +5,6 @@ on:
     # 1. Trigger ONLY on release branches
     branches:
       - "release/**"
-    # 2. Trigger ONLY if files in this service changed
-    paths:
-      - 'bazar-space/**'
-      - '.github/workflows/bazar-space.yml'
   workflow_dispatch:
 env:
   SERVICE_CONTEXT: ./bazar-space
