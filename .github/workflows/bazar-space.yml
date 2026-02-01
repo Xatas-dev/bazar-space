@@ -44,17 +44,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Java for gradlew
         uses: actions/setup-java@v4
-        if: github.event_name == 'push' && github.ref_name == 'master'
         with:
           java-version: '21'
           distribution: 'temurin'
       - name: Extract Version
-        if: github.event_name == 'push' && github.ref_name == 'master'
         id: get_version
         run: |
           chmod +x gradlew
           VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
@@ -73,7 +71,7 @@ jobs:
           push: ${{ github.event_name == 'push' && github.ref_name == 'master' || github.event_name == 'workflow_dispatch' }}
           load: ${{ !(github.event_name == 'push' && github.ref_name == 'master') && !(github.event_name == 'workflow_dispatch') }}
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}
+            ${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }}
             ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
