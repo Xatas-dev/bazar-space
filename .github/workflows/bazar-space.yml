@@ -140,7 +140,7 @@ jobs:
       - name: Create or Update Git Tag
         if: github.ref == 'refs/heads/master'
         run: |
-          TAG_NAME="bauth-${{ env.APP_VERSION }}"
+          TAG_NAME="bspace-${{ env.APP_VERSION }}"
 
           # Configure git user (required for tagging)
           git config user.name "github-actions[bot]"
