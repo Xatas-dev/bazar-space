@@ -36,10 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     
     if: |
-      ${{ needs.pre_job.outputs.should_skip != 'true' }} ||
+      ${{ needs.pre_job.outputs.should_skip != 'true' }} && (
       github.event_name == 'push' ||
       github.event_name == 'pull_request' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch')
     
     steps:
       - uses: actions/checkout@v4
