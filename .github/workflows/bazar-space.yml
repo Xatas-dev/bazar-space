@@ -21,26 +21,16 @@ env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/bazar-space
 
 jobs:
-
-  # BUILD
-  build:
+  pre_job:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.get_version.outputs.version }}
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v3.4.0
         with:
-          java-version: '21'
-          distribution: 'temurin'
-      - name: Extract Version
-        id: get_version
-        run: |
-          chmod +x gradlew
-          VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          skip_after_successful_duplicate: 'true'
 
-  # DOCKER BUILD
   docker-build:
     needs: build
     runs-on: ubuntu-latest
@@ -52,6 +42,19 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Java for gradlew
+        uses: actions/setup-java@v4
+        if: github.event_name == 'push' && github.ref_name == 'master'
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Extract Version
+        if: github.event_name == 'push' && github.ref_name == 'master'
+        id: get_version
+        run: |
+          chmod +x gradlew
+          VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
