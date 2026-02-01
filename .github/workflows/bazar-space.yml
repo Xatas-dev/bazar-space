@@ -32,7 +32,7 @@ jobs:
           skip_after_successful_duplicate: 'true'
 
   docker-build:
-    needs: build
+    needs: pre_job
     runs-on: ubuntu-latest
     
     if: |
