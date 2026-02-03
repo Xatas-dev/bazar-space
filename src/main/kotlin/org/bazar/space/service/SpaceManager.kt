@@ -54,7 +54,7 @@ class SpaceManager(
     }
 
     @Transactional
-    fun patchSpace(spaceId: Long, name: String): GetSpaceDto {
+    fun updateSpace(spaceId: Long, name: String): GetSpaceDto {
         return spaceService.patchSpace(spaceId, name)
     }
 

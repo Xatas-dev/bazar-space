@@ -45,7 +45,7 @@ class SpaceAdminController(
         @PathVariable spaceId: Long,
         name: String
     ): ResponseEntity<GetSpaceDto> {
-        val response = spaceManager.patchSpace(spaceId, name)
+        val response = spaceManager.updateSpace(spaceId, name)
         return ResponseEntity.ok(response)
     }
 }

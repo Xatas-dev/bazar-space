@@ -75,14 +75,19 @@ kotlin {
     }
 }
 
+openApiValidate {
+    inputSpec = "$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml".toString()
+    recommend = true
+}
+
 openApiGenerate {
     generatorName.set("kotlin-spring")
-    inputSpec.set("$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml")
-    outputDir.set("${layout.buildDirectory.locationOnly.get()}/generated/openapi")
+    inputSpec = "$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml"
+    outputDir = "${layout.buildDirectory.locationOnly.get()}/generated/openapi"
 
     // Packages for generated code
-    apiPackage.set("org.bazar.space.api")
-    modelPackage.set("org.bazar.space.model")
+    apiPackage= "org.bazar.space.api"
+    modelPackage = "org.bazar.space.model"
     typeMappings.set(mapOf(
         "DateTime" to "java.time.Instant"
     ))
