@@ -1,10 +1,10 @@
-package org.bazar.bazar.space
+package org.bazar.space
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
-class BazarSpaceApplicationTests {
+class BazarSpaceApplicationTests: BaseIntegrationTest() {
 
     @Test
     fun contextLoads() {

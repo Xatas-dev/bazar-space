@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: 20260202-00-0-add-name-column.sql
+      relativeToChangelogFile: true

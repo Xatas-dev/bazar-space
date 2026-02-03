@@ -1,8 +1,12 @@
 package org.bazar.space.service
 
 import org.bazar.space.entity.Space
-import org.bazar.space.model.http.response.GetUserSpacesDtoResponse
+import org.bazar.space.model.GetSpaceDto
+import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.repository.SpaceRepository
+import org.bazar.space.util.exceptions.ApiException
+import org.bazar.space.util.exceptions.ApiExceptions
+import org.bazar.space.util.extension.toGetSpaceDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -13,15 +17,25 @@ class SpaceService(
     private final val spaceRepository: SpaceRepository
 ) {
 
-    fun createSpace(): Long = spaceRepository.save(Space()).id!!
+    fun createSpace(name: String): GetSpaceDto = spaceRepository.save(Space(name = name))
+        .toGetSpaceDto()
 
-    fun getAllUserSpaces(userId: UUID): GetUserSpacesDtoResponse {
-       val spaceIds = spaceRepository.findAllByUserId(userId)
-            .map { it.id!!}
+    fun getAllUserSpaces(userId: UUID): GetSpacesResponse {
+        val spaces = spaceRepository.findAllByUserId(userId)
+            .map {
+                GetSpaceDto(it.id!!, it.name)
+            }
             .toList()
-        return GetUserSpacesDtoResponse(spaceIds)
+        return GetSpacesResponse(spaces)
     }
 
     fun deleteSpaceById(spaceId: Long) = spaceRepository.deleteById(spaceId)
+
+    fun patchSpace(spaceId: Long, name: String): GetSpaceDto {
+        val space = spaceRepository.findById(spaceId)
+            .orElseThrow { ApiException(ApiExceptions.SPACE_NOT_FOUND, spaceId) }
+        space.name = name
+        return GetSpaceDto(spaceId, name)
+    }
 
 }
