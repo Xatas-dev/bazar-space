@@ -1,39 +1,42 @@
 openapi: 3.1.0
 info:
   title: Bazar space openapi
-  version: v0
-servers:
-  - url: http://localhost:8080/api
-    description: Generated server url
+  version: v1
 paths:
   /space:
     get:
       tags:
-        - space-admin-controller
-      operationId: getAllUserSpaces
+        - space-controller
+      operationId: getAllSpaces
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            "application/json":
               schema:
-                $ref: "#/components/schemas/GetUserSpacesDtoResponse"
+                $ref: "#/components/schemas/GetSpacesResponse"
     post:
       tags:
         - space-admin-controller
       operationId: createSpace
+      parameters:
+        - in: query
+          name: name
+          description: space name
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            "application/json":
               schema:
-                type: integer
-                format: int64
+                $ref: '#/components/schemas/GetSpaceDto'
   /space/user:
     post:
       tags:
-        - space-controller
+        - space-admin-controller
       operationId: addUserToSpace
       requestBody:
         content:
@@ -60,7 +63,7 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            "application/json":
               schema:
                 type: array
                 items:
@@ -81,10 +84,33 @@ paths:
       responses:
         "200":
           description: OK
+    patch:
+      tags:
+        - space-admin-controller
+      operationId: patchSpace
+      parameters:
+        - name: spaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/GetSpaceDto"
   /space/{spaceId}/user/{userId}:
     delete:
       tags:
-        - space-controller
+        - space-admin-controller
       operationId: deleteUserFromSpace
       parameters:
         - name: spaceId
@@ -113,11 +139,26 @@ components:
         spaceId:
           type: integer
           format: int64
-    GetUserSpacesDtoResponse:
+      required:
+        - userId
+        - spaceId
+    GetSpaceDto:
+      description: space info for get requests
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+
+    GetSpacesResponse:
       type: object
       properties:
-        spaceIds:
+        spaces:
           type: array
           items:
-            type: integer
-            format: int64
+            $ref: '#/components/schemas/GetSpaceDto'

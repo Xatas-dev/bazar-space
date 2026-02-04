@@ -6,11 +6,14 @@ import java.time.Instant
 
 @Entity
 @Table(name = "space")
-class Space (
+class Space(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     val id: Long? = null,
+
+    @Column(name = "name", nullable = false)
+    var name: String,
 
     @ColumnDefault("now()")
     @Column(name = "created_at", nullable = false)
