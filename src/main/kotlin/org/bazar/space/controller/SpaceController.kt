@@ -1,30 +1,31 @@
 package org.bazar.space.controller
 
+import org.bazar.space.api.SpaceControllerApi
 import org.bazar.space.config.authorization.AuthorizationAction.READ_SPACE
 import org.bazar.space.config.authorization.SpacePreAuthorize
-import org.bazar.space.model.http.request.AddUserToSpaceDtoRequest
+import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.service.SpaceManager
-import org.springframework.web.bind.annotation.*
+import org.bazar.space.util.getAuthenticatedUserIdOrThrow
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RestController
 import java.util.*
 
 @RestController
-@RequestMapping("/space")
 class SpaceController(
     private val spaceManager: SpaceManager
-) {
+) : SpaceControllerApi {
 
-    @PostMapping("/user")
-    fun addUserToSpace(@RequestBody dto: AddUserToSpaceDtoRequest) {
-        spaceManager.addUserToSpace(dto.userId, dto.spaceId)
+    override fun getAllSpaces(): ResponseEntity<GetSpacesResponse> {
+        val response = spaceManager.getAllSpacesByUserId(getAuthenticatedUserIdOrThrow())
+        return ResponseEntity.ok(response)
     }
 
-    @DeleteMapping("/{spaceId}/user/{userId}")
-    fun deleteUserFromSpace(@PathVariable spaceId: Long, @PathVariable userId: UUID) =
-        spaceManager.deleteUserFromSpace(spaceId, userId)
-
-    @GetMapping("/{spaceId}/user")
     @SpacePreAuthorize(READ_SPACE)
-    fun getAllUsersInSpace(@PathVariable spaceId: Long) = spaceManager.getAllUsersInSpace(spaceId)
+    override fun getAllUsersInSpace(@PathVariable spaceId: Long): ResponseEntity<List<UUID>> {
+        val response = spaceManager.getAllUsersInSpace(spaceId)
+        return ResponseEntity.ok(response)
+    }
 
 
 }

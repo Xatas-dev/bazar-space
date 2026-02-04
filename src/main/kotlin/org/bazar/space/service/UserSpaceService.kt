@@ -14,17 +14,17 @@ class UserSpaceService(
 
     @Transactional
     fun addUserToSpace(spaceId: Long, userId: UUID) {
-        val entity = UserSpace(space = Space(spaceId), userId = userId);
+        val entity = UserSpace(space = Space(spaceId, ""), userId = userId)
         userSpaceRepository.save(entity)
     }
 
     @Transactional
-    fun deleteAllBySpaceId(spaceId: Long){
+    fun deleteAllBySpaceId(spaceId: Long) {
         userSpaceRepository.deleteAllBySpaceId(spaceId)
     }
 
     @Transactional
-    fun deleteUserFromSpace(spaceId: Long, userId: UUID){
+    fun deleteUserFromSpace(spaceId: Long, userId: UUID) {
         userSpaceRepository.deleteBySpaceIdAndUserId(spaceId, userId)
     }
 

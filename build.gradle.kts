@@ -1,4 +1,6 @@
 import com.google.protobuf.gradle.id
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "2.2.21"
@@ -7,6 +9,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.springframework.boot.aot") version "3.0.6"
     id("com.google.protobuf") version "0.9.5"
+    id("org.openapi.generator") version "7.2.0"
     kotlin("plugin.jpa") version "2.2.21"
 }
 val springGrpcVersion by extra("1.0.0")
@@ -58,11 +61,52 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("io.swagger.core.v3:swagger-annotations:2.2.38")
+    implementation("io.swagger.core.v3:swagger-models:2.2.38")
+    implementation("jakarta.validation:jakarta.validation-api")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:postgresql:1.21.0")
 }
 
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+    }
+}
+
+openApiValidate {
+    inputSpec = "$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml".toString()
+    recommend = true
+}
+
+openApiGenerate {
+    generatorName.set("kotlin-spring")
+    inputSpec = "$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml"
+    outputDir = "${layout.buildDirectory.locationOnly.get()}/generated/openapi"
+
+    // Packages for generated code
+    apiPackage= "org.bazar.space.api"
+    modelPackage = "org.bazar.space.model"
+    typeMappings.set(mapOf(
+        "DateTime" to "java.time.Instant"
+    ))
+    configOptions.set(mapOf(
+        "useSpringBoot3" to "true",
+        "interfaceOnly" to "true",
+        "exceptionHandler" to "false",
+        "skipDefaultInterface" to "true",
+        "dateLibrary" to "java8",
+        "useTags" to "true",
+        "useBeanValidation" to "true",
+        "documentationProvider" to "springdoc",
+        "gradleBuildFile" to "false"
+    ))
+}
+
+sourceSets {
+    main {
+        kotlin.srcDir("${layout.buildDirectory.locationOnly.get()}/generated/openapi/src/main/kotlin")
     }
 }
 
@@ -101,4 +145,8 @@ allOpen {
 tasks.withType<Test> {
     useJUnitPlatform()
     jvmArgs("-javaagent:${mockitoAgent.asPath}", "-Xshare:off")
+}
+
+tasks.withType<KotlinCompile> {
+    dependsOn("openApiGenerate")
 }

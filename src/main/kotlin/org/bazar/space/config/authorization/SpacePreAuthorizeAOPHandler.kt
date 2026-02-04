@@ -12,7 +12,6 @@ import org.bazar.space.util.exceptions.ApiExceptions.AUTHORIZATION_SERVICE_ERROR
 import org.bazar.space.util.exceptions.ApiExceptions.FORBIDDEN
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
-import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component

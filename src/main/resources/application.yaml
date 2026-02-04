@@ -1,12 +1,10 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/bzruathz}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bzrspace}
     username: ${DB_USER:postgres}
     password: ${DB_PASS:postgres}
   liquibase:
     change-log: db/changelog/changelog-master.yaml
-  jpa:
-    show-sql: true
   grpc:
     client:
       default-channel:

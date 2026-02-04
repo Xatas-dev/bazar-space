@@ -6,5 +6,6 @@ enum class AuthorizationAction(val actionName: String) {
     DELETE_SPACE("delete_space"),
     ACCESS_CHAT("access_chat"),
     READ_SPACE("read_space"),
+    EDIT_SPACE("edit_space"),
     ACCESS_STORAGE("access_storage");
 }
