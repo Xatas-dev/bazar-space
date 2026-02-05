@@ -20,7 +20,7 @@ RUN java -Djarmode=tools -jar application.jar extract --layers --destination ext
 # ==========================================
 # Stage 2: Create the Runtime Image
 # ==========================================
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:25
 
 WORKDIR /application
 
@@ -28,9 +28,9 @@ WORKDIR /application
 # MaxRAMPercentage=75.0 means the JVM will use 75% of the container's available memory limit (e.g., 384MB of a 512MB container)
 ENV JDK_JAVA_OPTIONS="-Dspring.aot.enabled=true -XX:MaxRAMPercentage=80.0 -XX:+UseStringDeduplication -Xss256k"
 
-# Create a non-root user for security (best practice)
-RUN addgroup -S spring && adduser -S spring -G spring && chown -R spring:spring /application
-USER spring:spring
+RUN groupadd --system spring && \
+    useradd --system --gid spring --no-create-home spring && \
+    chown -R spring:spring /application
 
 # Copy the layers extracted in Stage 1
 # Order matters: dependencies are least likely to change, application is most likely
