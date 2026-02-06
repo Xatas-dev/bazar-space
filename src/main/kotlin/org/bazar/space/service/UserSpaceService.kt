@@ -1,10 +1,10 @@
 package org.bazar.space.service
 
-import jakarta.transaction.Transactional
-import org.bazar.space.entity.Space
-import org.bazar.space.entity.UserSpace
-import org.bazar.space.repository.UserSpaceRepository
+import org.bazar.space.persistence.entity.Space
+import org.bazar.space.persistence.entity.UserSpace
+import org.bazar.space.persistence.repository.UserSpaceRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @Service
@@ -14,7 +14,7 @@ class UserSpaceService(
 
     @Transactional
     fun addUserToSpace(spaceId: Long, userId: UUID) {
-        val entity = UserSpace(space = Space(spaceId, ""), userId = userId)
+        val entity = UserSpace(spaceId = spaceId, userId = userId)
         userSpaceRepository.save(entity)
     }
 

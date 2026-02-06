@@ -3,9 +3,9 @@ package org.bazar.space.controller
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.bazar.space.BaseWebTest
-import org.bazar.space.entity.Space
-import org.bazar.space.repository.SpaceRepository
-import org.bazar.space.repository.UserSpaceRepository
+import org.bazar.space.persistence.entity.Space
+import org.bazar.space.persistence.repository.SpaceRepository
+import org.bazar.space.persistence.repository.UserSpaceRepository
 import org.bazar.space.utils.SpaceCreator
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

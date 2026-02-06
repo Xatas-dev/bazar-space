@@ -1,6 +1,6 @@
 package org.bazar.space.config.authorization.client
 
-import org.bazar.space.config.authorization.AuthorizationAction
+import org.bazar.space.service.authorization.AuthorizationAction
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.util.UUID

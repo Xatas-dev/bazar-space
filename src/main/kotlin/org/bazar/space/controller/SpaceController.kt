@@ -1,10 +1,11 @@
 package org.bazar.space.controller
 
 import org.bazar.space.api.SpaceControllerApi
-import org.bazar.space.config.authorization.AuthorizationAction.READ_SPACE
-import org.bazar.space.config.authorization.SpacePreAuthorize
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.service.SpaceManager
+import org.bazar.space.service.authorization.AuthorizationAction
+import org.bazar.space.service.authorization.AuthorizationAction.READ_SPACE
+import org.bazar.space.service.authorization.SpaceAuthorizationService
 import org.bazar.space.util.getAuthenticatedUserIdOrThrow
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -13,7 +14,8 @@ import java.util.*
 
 @RestController
 class SpaceController(
-    private val spaceManager: SpaceManager
+    private val spaceManager: SpaceManager,
+    private val spaceAuthorizationService: SpaceAuthorizationService
 ) : SpaceControllerApi {
 
     override fun getAllSpaces(): ResponseEntity<GetSpacesResponse> {
@@ -21,8 +23,8 @@ class SpaceController(
         return ResponseEntity.ok(response)
     }
 
-    @SpacePreAuthorize(READ_SPACE)
     override fun getAllUsersInSpace(@PathVariable spaceId: Long): ResponseEntity<List<UUID>> {
+        spaceAuthorizationService.authorizeOrThrow(spaceId, READ_SPACE)
         val response = spaceManager.getAllUsersInSpace(spaceId)
         return ResponseEntity.ok(response)
     }
