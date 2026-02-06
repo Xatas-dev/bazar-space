@@ -7,10 +7,8 @@ plugins {
     kotlin("plugin.spring") version "2.2.21"
     id("org.springframework.boot") version "4.0.1"
     id("io.spring.dependency-management") version "1.1.7"
-    id("org.springframework.boot.aot") version "3.0.6"
     id("com.google.protobuf") version "0.9.5"
     id("org.openapi.generator") version "7.2.0"
-    kotlin("plugin.jpa") version "2.2.21"
 }
 val springGrpcVersion by extra("1.0.0")
 
@@ -32,6 +30,7 @@ extra["springGrpcVersion"] = "1.0.0"
 val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     // Mockito agent fix
     testImplementation("org.mockito:mockito-core:5.20.0")
     mockitoAgent("org.mockito:mockito-core:5.20.0") { isTransitive = false }
@@ -44,14 +43,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     //gRPC
-    implementation("io.grpc:grpc-services")
     testImplementation("org.springframework.grpc:spring-grpc-test")
     implementation("org.springframework.grpc:spring-grpc-spring-boot-starter")
 
     //DB
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
-    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     runtimeOnly("org.postgresql:postgresql")
 
     //Web
