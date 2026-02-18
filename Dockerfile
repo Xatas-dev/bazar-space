@@ -9,14 +9,13 @@ WORKDIR /app
 COPY build.gradle.kts settings.gradle.kts ./
 
 COPY src ./src
-RUN gradle bootJar --no-daemon
+RUN gradle bootJar
 
 # Extract layers for optimization
 # This splits the fat jar into dependencies, loader, and application code
 RUN mv build/libs/bazar-space-*.jar build/libs/application.jar
 WORKDIR /app/build/libs
 RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
-
 # ==========================================
 # Stage 2: Create the Runtime Image
 # ==========================================
@@ -26,7 +25,7 @@ WORKDIR /application
 
 # Optimize Java memory usage for containers
 # MaxRAMPercentage=75.0 means the JVM will use 75% of the container's available memory limit (e.g., 384MB of a 512MB container)
-ENV JDK_JAVA_OPTIONS="-Dspring.aot.enabled=true -XX:MaxRAMPercentage=80.0 -XX:+UseStringDeduplication -Xss256k"
+ENV JDK_JAVA_OPTIONS="-XX:MaxRAMPercentage=80.0 -XX:+UseStringDeduplication"
 
 RUN groupadd --system spring && \
     useradd --system --gid spring --no-create-home spring && \

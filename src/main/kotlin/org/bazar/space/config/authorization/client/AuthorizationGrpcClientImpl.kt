@@ -5,8 +5,8 @@ import io.grpc.StatusRuntimeException
 import org.bazar.authorization.grpc.*
 import org.bazar.authorization.grpc.AuthorizationAdminServiceGrpc.AuthorizationAdminServiceBlockingStub
 import org.bazar.authorization.grpc.AuthorizationServiceGrpc.AuthorizationServiceBlockingStub
-import org.bazar.space.config.authorization.AuthorizationAction
 import org.bazar.space.model.http.UserSpaceRole
+import org.bazar.space.service.authorization.AuthorizationAction
 import org.bazar.space.util.extension.toApiException
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Component

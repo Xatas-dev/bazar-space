@@ -1,11 +1,11 @@
 package org.bazar.space.controller
 
 import org.bazar.space.api.SpaceAdminControllerApi
-import org.bazar.space.config.authorization.AuthorizationAction
-import org.bazar.space.config.authorization.SpacePreAuthorize
 import org.bazar.space.model.AddUserToSpaceDtoRequest
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.service.SpaceManager
+import org.bazar.space.service.authorization.AuthorizationAction.EDIT_SPACE
+import org.bazar.space.service.authorization.SpaceAuthorizationService
 import org.bazar.space.util.getAuthenticatedUserIdOrThrow
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,7 +14,8 @@ import java.util.*
 
 @RestController
 class SpaceAdminController(
-    final val spaceManager: SpaceManager
+    private val spaceManager: SpaceManager,
+    private val spaceAuthorizationService: SpaceAuthorizationService
 ) : SpaceAdminControllerApi {
 
     override fun addUserToSpace(addUserToSpaceDtoRequest: AddUserToSpaceDtoRequest): ResponseEntity<Unit> {
@@ -40,11 +41,11 @@ class SpaceAdminController(
         return ResponseEntity.ok().build()
     }
 
-    @SpacePreAuthorize(action = AuthorizationAction.EDIT_SPACE)
     override fun patchSpace(
         @PathVariable spaceId: Long,
         name: String
     ): ResponseEntity<GetSpaceDto> {
+        spaceAuthorizationService.authorizeOrThrow(spaceId, EDIT_SPACE)
         val response = spaceManager.updateSpace(spaceId, name)
         return ResponseEntity.ok(response)
     }
