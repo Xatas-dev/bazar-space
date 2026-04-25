@@ -5,10 +5,6 @@ spring:
     password: ${DB_PASS:postgres}
   liquibase:
     change-log: db/changelog/changelog-master.yaml
-  grpc:
-    client:
-      default-channel:
-        address: ${BAZAR_AUTHORIZATION_GRPC_URL:localhost:9090}
   security:
     oauth2:
         resourceserver:
@@ -28,3 +24,6 @@ logging:
   level:
     org:
       bazar: ${LOGGING_LEVEL:DEBUG}
+authorization:
+  port: 9090
+  host: localhost

@@ -1,13 +1,11 @@
-import com.google.protobuf.gradle.id
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("plugin.spring") version "2.2.21"
-    id("org.springframework.boot") version "4.0.1"
+    id("org.springframework.boot") version "4.0.3"
     id("io.spring.dependency-management") version "1.1.7"
-    id("com.google.protobuf") version "0.9.5"
     id("org.openapi.generator") version "7.2.0"
 }
 val springGrpcVersion by extra("1.0.0")
@@ -24,9 +22,16 @@ java {
 
 repositories {
     mavenCentral()
+    mavenLocal()
+    maven {
+        url = uri("https://maven.pkg.github.com/Xatas-dev/bazar-authorization-sdk")
+        credentials {
+            password = System.getenv("GITHUB_TOKEN")
+                ?: project.findProperty("gpr.token") as String?
+        }
+    }
 }
 
-extra["springGrpcVersion"] = "1.0.0"
 val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
@@ -37,14 +42,11 @@ dependencies {
 
     //security
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
+    implementation("org.bazar:bazar-authorization-sdk:1.0.0")
 
     //Observability
     implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-
-    //gRPC
-    testImplementation("org.springframework.grpc:spring-grpc-test")
-    implementation("org.springframework.grpc:spring-grpc-spring-boot-starter")
 
     //DB
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
@@ -72,7 +74,7 @@ kotlin {
 }
 
 openApiValidate {
-    inputSpec = "$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml".toString()
+    inputSpec = "$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml"
     recommend = true
 }
 
@@ -103,26 +105,6 @@ openApiGenerate {
 sourceSets {
     main {
         kotlin.srcDir("${layout.buildDirectory.locationOnly.get()}/generated/openapi/src/main/kotlin")
-    }
-}
-
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc"
-    }
-    plugins {
-        id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java"
-        }
-    }
-    generateProtoTasks {
-        all().forEach {
-            it.plugins {
-                id("grpc") {
-                    option("@generated=omit")
-                }
-            }
-        }
     }
 }
 

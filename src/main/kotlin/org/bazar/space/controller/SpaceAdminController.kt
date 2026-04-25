@@ -1,11 +1,12 @@
 package org.bazar.space.controller
 
+import org.bazar.authorization.sdk.Permission
 import org.bazar.space.api.SpaceAdminControllerApi
 import org.bazar.space.model.AddUserToSpaceDtoRequest
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.service.SpaceManager
-import org.bazar.space.service.authorization.AuthorizationAction.EDIT_SPACE
 import org.bazar.space.service.authorization.SpaceAuthorizationService
+import org.bazar.space.util.buildAuthorizationRequest
 import org.bazar.space.util.getAuthenticatedUserIdOrThrow
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -45,7 +46,7 @@ class SpaceAdminController(
         @PathVariable spaceId: Long,
         name: String
     ): ResponseEntity<GetSpaceDto> {
-        spaceAuthorizationService.authorizeOrThrow(spaceId, EDIT_SPACE)
+        spaceAuthorizationService.authorizeOrThrow(buildAuthorizationRequest(spaceId, Permission.SPACE_WRITE))
         val response = spaceManager.updateSpace(spaceId, name)
         return ResponseEntity.ok(response)
     }
