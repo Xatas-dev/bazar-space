@@ -25,6 +25,12 @@ repositories {
     mavenLocal()
     maven {
         url = uri("https://maven.pkg.github.com/Xatas-dev/bazar-authorization-sdk")
+        credentials {
+            password = System.getenv("GITHUB_TOKEN")
+                ?: project.findProperty("gpr.token") as String?
+            username = System.getenv("GITHUB_ACTOR")
+                ?: project.findProperty("gpr.user") as String?
+        }
     }
 }
 
