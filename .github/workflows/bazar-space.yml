@@ -138,6 +138,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
         env:
+          GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   create-tag:
     needs: docker-build-and-publish
