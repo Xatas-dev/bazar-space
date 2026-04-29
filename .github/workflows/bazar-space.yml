@@ -159,3 +159,5 @@ jobs:
 
           # Push with --force to update the remote tag
           git push origin -f "$TAG_NAME"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
