@@ -137,6 +137,8 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   create-tag:
     needs: docker-build-and-publish
     runs-on: ubuntu-latest
@@ -159,5 +161,3 @@ jobs:
 
           # Push with --force to update the remote tag
           git push origin -f "$TAG_NAME"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
