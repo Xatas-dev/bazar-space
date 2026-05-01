@@ -96,8 +96,8 @@ jobs:
         with:
           category: "/language:${{matrix.language}}"
         env:
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR=${{ github.actor }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   docker-build-and-publish:
     needs: pre_job
     runs-on: ubuntu-latest
