@@ -21,6 +21,7 @@ class SpaceManager(
 
     private val logger = KotlinLogging.logger { }
 
+    //Todo: Подумать как решить dual write problem, https://grinbog015.atlassian.net/browse/BZR-113
     @Transactional
     fun createSpace(userId: UUID, name: String): GetSpaceDto {
         val spaceDto = spaceService.createSpace(name)
