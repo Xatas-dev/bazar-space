@@ -12,18 +12,19 @@ fun Space.toGetSpaceDto() = GetSpaceDto(id!!, name)
 
 fun buildGetUsersInSpaceResponse(
     spaceId: Long,
+    userIds: List<UUID>,
     userIdToUserInfoMap: Map<UUID, UserPersonaDto>,
     userIdToRoleNameMap: Map<UUID, GetRoleNameDto>
 ): GetUsersInSpaceResponse {
 
-    val userList = userIdToUserInfoMap.map {
+    val userList = userIds.map {
         UserInSpaceDto(
-            it.key,
+            it,
             spaceId,
-            it.value.userName,
-            it.value.firstName,
-            it.value.lastName,
-            userIdToRoleNameMap[it.key]?.name ?: "UNKNOWN"
+            userIdToUserInfoMap[it]?.userName ?: "",
+            userIdToUserInfoMap[it]?.firstName ?: "",
+            userIdToUserInfoMap[it]?.lastName ?: "",
+            userIdToRoleNameMap[it]?.name ?: "UNKNOWN"
         )
     }
     return GetUsersInSpaceResponse(userList)

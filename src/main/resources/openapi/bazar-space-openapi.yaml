@@ -171,18 +171,18 @@ components:
     UserInSpaceDto:
       type: object
       required:
-        - user_id
-        - space_id
+        - userId
+        - spaceId
         - userName
         - firstName
         - lastName
         - role
       properties:
-        user_id:
+        userId:
           type: string
           format: uuid
           description: User ID
-        space_id:
+        spaceId:
           type: integer
           format: int64
           description: Space ID
