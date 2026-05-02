@@ -13,3 +13,11 @@ fun getAuthenticatedUserIdOrThrow(): UUID {
     val jwt = authentication.principal as Jwt
     return jwt.subject.toUuid()
 }
+
+fun getCurrentJwt(): String {
+    val authentication = SecurityContextHolder.getContext().authentication
+        ?: throw ApiException(ApiExceptions.NOT_AUTHENTICATED)
+
+    val jwt = authentication.principal as Jwt
+    return jwt.tokenValue
+}

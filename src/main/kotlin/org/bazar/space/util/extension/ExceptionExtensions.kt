@@ -1,15 +1,9 @@
 package org.bazar.space.util.extension
 
-import io.grpc.Status.Code.*
-import io.grpc.StatusRuntimeException
+import org.bazar.authorization.sdk.AuthorizationException
 import org.bazar.space.util.exceptions.ApiException
-import org.bazar.space.util.exceptions.ApiExceptions.*
+import org.bazar.space.util.exceptions.ApiExceptions.FORBIDDEN_GRPC
 
-fun StatusRuntimeException.toApiException(): ApiException {
-    return when (this.status.code) {
-        UNAUTHENTICATED -> ApiException(NOT_AUTHENTICATED_GRPC)
-        PERMISSION_DENIED -> ApiException(FORBIDDEN_GRPC)
-        NOT_FOUND -> ApiException(NOT_FOUND_GRPC)
-        else -> ApiException(INTERNAL_ERROR_GRPC)
-    }
+fun AuthorizationException.toApiException(): ApiException {
+    return ApiException(FORBIDDEN_GRPC)
 }

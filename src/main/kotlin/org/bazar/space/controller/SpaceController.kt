@@ -3,9 +3,8 @@ package org.bazar.space.controller
 import org.bazar.space.api.SpaceControllerApi
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.service.SpaceManager
-import org.bazar.space.service.authorization.AuthorizationAction
-import org.bazar.space.service.authorization.AuthorizationAction.READ_SPACE
-import org.bazar.space.service.authorization.SpaceAuthorizationService
+import org.bazar.space.util.exceptions.ApiException
+import org.bazar.space.util.exceptions.ApiExceptions
 import org.bazar.space.util.getAuthenticatedUserIdOrThrow
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,8 +13,7 @@ import java.util.*
 
 @RestController
 class SpaceController(
-    private val spaceManager: SpaceManager,
-    private val spaceAuthorizationService: SpaceAuthorizationService
+    private val spaceManager: SpaceManager
 ) : SpaceControllerApi {
 
     override fun getAllSpaces(): ResponseEntity<GetSpacesResponse> {
@@ -24,8 +22,11 @@ class SpaceController(
     }
 
     override fun getAllUsersInSpace(@PathVariable spaceId: Long): ResponseEntity<List<UUID>> {
-        spaceAuthorizationService.authorizeOrThrow(spaceId, READ_SPACE)
         val response = spaceManager.getAllUsersInSpace(spaceId)
+
+        if (!response.contains(getAuthenticatedUserIdOrThrow()))
+            throw ApiException(ApiExceptions.FORBIDDEN)
+
         return ResponseEntity.ok(response)
     }
 
