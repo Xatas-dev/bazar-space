@@ -2,7 +2,6 @@ package org.bazar.space
 
 import org.bazar.authorization.sdk.BazarAuthorizationAdminClient
 import org.bazar.authorization.sdk.BazarAuthorizationClient
-import org.junit.jupiter.api.BeforeAll
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -22,6 +21,7 @@ abstract class BaseIntegrationTest {
 
     @MockitoBean
     lateinit var bazarAuthorizationClient: BazarAuthorizationClient
+
     @MockitoBean
     lateinit var bazarAuthorizationAdminClient: BazarAuthorizationAdminClient
 

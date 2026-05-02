@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @Service
-class SpaceManager(
+class SpaceAdminApiService(
     private val spaceService: SpaceService,
     private val userSpaceService: UserSpaceService,
     private val bazarAuthorizationAdminClient: BazarAuthorizationAdminClient
@@ -35,12 +35,6 @@ class SpaceManager(
         logger.info { "Created space=$spaceDto" }
         return spaceDto
     }
-
-    @Transactional
-    fun getAllSpacesByUserId(authenticatedUserId: UUID) = spaceService.getAllUserSpaces(authenticatedUserId)
-
-    @Transactional
-    fun getAllUsersInSpace(spaceId: Long) = userSpaceService.getAllUsersInSpace(spaceId)
 
     @Transactional
     fun addUserToSpace(userToAddId: UUID, spaceId: Long) {

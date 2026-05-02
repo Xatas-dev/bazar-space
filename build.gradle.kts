@@ -57,6 +57,15 @@ dependencies {
     //Web
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+
+
+    //Cache
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
+    //HTTP Client
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:5.0.0")
+
     //Else
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
