@@ -1,5 +1,6 @@
 package org.bazar.space.util.rest.client
 
+import feign.FeignException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.bazar.space.config.cache.Caches
 import org.bazar.space.util.rest.BazarPersonaFeignClient
@@ -26,7 +27,12 @@ class BazarPersonaClient(
             return usersInCache
         }
 
-        val response = bazarPersonaFeignClient.getUsersByIds(cacheMissedUserIds)
+        val response = try {
+            bazarPersonaFeignClient.getUsersByIds(cacheMissedUserIds)
+        } catch (ex: FeignException) {
+            logger.error(ex) { "Error during bazar-persona call, can't enrich original response with user info" }
+            emptyList()
+        }
         val usersResponse = response.associateBy { it.id }
         putInCache(usersResponse)
 

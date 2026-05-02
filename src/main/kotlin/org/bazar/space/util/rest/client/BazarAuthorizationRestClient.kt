@@ -1,5 +1,6 @@
 package org.bazar.space.util.rest.client
 
+import feign.FeignException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.bazar.space.config.cache.Caches
 import org.bazar.space.config.cache.RoleNameCacheKey
@@ -29,7 +30,13 @@ class BazarAuthorizationHttpClient(
             return cacheHit
         }
 
-        val response = bazarAuthorizationFeignClient.getRoleNames(spaceId, cacheMiss)
+        val response = try {
+            bazarAuthorizationFeignClient.getRoleNames(spaceId, cacheMiss)
+        } catch (ex: FeignException) {
+            logger.error(ex) { "Error during bazar-authorization api call, can't enrich original response with role name" }
+            GetRoleNamesResponse(emptyList())
+        }
+
         val usersResponse = response.roles.associateBy { it.userId.toUuid() }
         putInCache(usersResponse.mapKeys { RoleNameCacheKey(spaceId, it.key).toString() })
 
