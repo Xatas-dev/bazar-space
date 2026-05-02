@@ -130,7 +130,7 @@ jobs:
               TAGS="${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }},${{ env.IMAGE_NAME }}:latest"
               PUSH_DOCKER_IMAGE="true"
             elif [[ "${{ github.ref_name }}" == "dev" ]]; then
-              TAGS="${{ env.IMAGE_NAME }}-${{ env.APP_VERSION }}-SNAPSHOT"
+              TAGS="${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }}-SNAPSHOT"
               PUSH_DOCKER_IMAGE="true"
             fi
           fi
