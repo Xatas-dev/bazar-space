@@ -12,7 +12,7 @@ import java.util.*
 )
 interface BazarAuthorizationFeignClient {
 
-    @GetMapping("/space-users/role-names")
+    @GetMapping("/v1/space-users/role-names")
     fun getRoleNames(
         @RequestParam("spaceId") spaceId: Long,
         @RequestParam("userIds") userIds: Collection<UUID>

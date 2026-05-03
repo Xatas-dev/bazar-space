@@ -31,5 +31,5 @@ authorization:
   host: ${BAZAR_AUTHORIZATION_HOST:localhost}
 rest:
   clients:
-    bazar-persona-url: ${BAZAR_PERSONA_API_URL:http://localhost:8081/api/v1}
+    bazar-persona-url: ${BAZAR_PERSONA_API_URL:http://localhost:8081/api}
     bazar-authz-url: ${BAZAR_AUTHORIZATION_API_URL:http://localhost:8082/api}
