@@ -13,6 +13,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  cache:
+    type: caffeine
 server:
   servlet:
     context-path: /api
@@ -25,5 +27,9 @@ logging:
     org:
       bazar: ${LOGGING_LEVEL:DEBUG}
 authorization:
-  port: 9090
-  host: localhost
+  port: ${BAZAR_AUTHORIZATION_PORT:9090}
+  host: ${BAZAR_AUTHORIZATION_HOST:localhost}
+rest:
+  clients:
+    bazar-persona-url: ${BAZAR_PERSONA_API_URL:http://localhost:8081/api/v1}
+    bazar-authz-url: ${BAZAR_AUTHORIZATION_API_URL:http://localhost:8082/api}
