@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.bazar.space.BaseWebTest
 import org.bazar.space.persistence.entity.Space
+import org.bazar.space.persistence.entity.UserSpace
 import org.bazar.space.persistence.repository.SpaceRepository
 import org.bazar.space.persistence.repository.UserSpaceRepository
 import org.bazar.space.utils.SpaceCreator
@@ -44,11 +45,15 @@ class SpaceAdminControllerTest : BaseWebTest() {
         }
         //then
         val spaces = spaceRepository.findAll()
+        val users = userRepository.findAll()
         assertThat(spaces)
             .hasSize(1)
             .extracting(Space::name)
             .containsExactlyInAnyOrder(tuple(spaceName))
-
+        assertThat(users)
+            .hasSize(1)
+        val user = users.first()
+        assertThat(user.creator).isTrue
     }
 
     @Test

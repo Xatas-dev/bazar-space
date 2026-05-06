@@ -6,6 +6,7 @@ import org.bazar.space.model.AddUserToSpaceDtoRequest
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.service.SpaceAdminApiService
 import org.bazar.space.service.authorization.SpaceAuthorizationService
+import org.bazar.space.service.authorization.SpaceAuthorizationServiceImpl
 import org.bazar.space.util.buildAuthorizationRequest
 import org.bazar.space.util.getAuthenticatedUserIdOrThrow
 import org.springframework.http.ResponseEntity

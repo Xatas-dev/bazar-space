@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: 20260503-00-0-add-creator-column-to-space-user-table.sql
+      relativeToChangelogFile: true

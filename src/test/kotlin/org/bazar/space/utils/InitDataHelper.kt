@@ -21,9 +21,9 @@ class InitDataHelper(
         return createUser(spaceId, UUID.randomUUID())
     }
 
-    fun createUser(spaceId: Long, userId: UUID): UserSpace {
+    fun createUser(spaceId: Long, userId: UUID, creator: Boolean = false): UserSpace {
         return userSpaceRepository.save(
-            UserSpace(spaceId = spaceId, userId = userId)
+            UserSpace(spaceId = spaceId, userId = userId, creator = creator)
         )
     }
 

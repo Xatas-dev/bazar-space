@@ -16,7 +16,8 @@ class UserSpaceRowMapper :
             createdAt = rs.getTimestamp("created_at").toInstant(),
             updatedAt = rs.getTimestamp("updated_at").toInstant(),
             spaceId = rs.getLong("space_id"),
-            userId = rs.getString("userId").toUuid()
+            userId = rs.getString("userId").toUuid(),
+            creator = rs.getBoolean("creator")
         )
 
 }
