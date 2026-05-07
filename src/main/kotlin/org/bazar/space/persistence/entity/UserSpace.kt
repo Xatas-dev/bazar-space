@@ -9,6 +9,7 @@ import java.util.*
 class UserSpace(
     val spaceId: Long,
     val userId: UUID,
+    val creator: Boolean,
     @Id val id: Long? = null,
     val createdAt: Instant = Instant.now(),
     var updatedAt: Instant = Instant.now()
