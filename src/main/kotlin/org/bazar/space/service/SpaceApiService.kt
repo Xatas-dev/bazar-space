@@ -36,8 +36,8 @@ class SpaceApiService(
         }
 
         val userIdToUserInfoMap = bazarPersonaClient.getUsersByIds(userIds)
-        val userIdToRoleNameMap = bazarAuthorizationHttpClient.getRoleNames(spaceId, userIds)
+        val userIdToGetRoleDtoMap = bazarAuthorizationHttpClient.getRoleNames(spaceId, userIds)
 
-        return buildGetUsersInSpaceResponse(spaceId, userIds, userIdToUserInfoMap, userIdToRoleNameMap)
+        return buildGetUsersInSpaceResponse(spaceId, userIds, userIdToUserInfoMap, userIdToGetRoleDtoMap)
     }
 }

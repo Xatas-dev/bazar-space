@@ -3,6 +3,7 @@ package org.bazar.space.controller
 import org.assertj.core.api.Assertions.assertThat
 import org.bazar.space.BaseWebTest
 import org.bazar.space.model.GetUsersInSpaceResponse
+import org.bazar.space.model.SimpleRoleDto
 import org.bazar.space.model.UserInSpaceDto
 import org.bazar.space.util.rest.client.GetRoleNameDto
 import org.bazar.space.util.rest.client.GetRoleNamesResponse
@@ -62,8 +63,10 @@ class SpaceControllerTest: BaseWebTest() {
         val mockAuthorizationResponse = GetRoleNamesResponse(
             List(6) { index ->
                 GetRoleNameDto(
+                    index.toLong(),
                     "CustomRole$index",
-                    users[index].userId.toString()
+                    users[index].userId.toString(),
+                    true
                 )
             }
         )
@@ -95,7 +98,12 @@ class SpaceControllerTest: BaseWebTest() {
                         mockPersonaResponse[index].userName,
                         mockPersonaResponse[index].firstName,
                         mockPersonaResponse[index].lastName,
-                        mockAuthorizationResponse.roles[index].name
+                        SimpleRoleDto(
+                            mockAuthorizationResponse.roles[index].id,
+                            mockAuthorizationResponse.roles[index].name,
+                            mockAuthorizationResponse.roles[index].isVisible
+                        )
+
                     )
                 }
             )
