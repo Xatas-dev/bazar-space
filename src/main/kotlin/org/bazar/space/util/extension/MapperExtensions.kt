@@ -2,6 +2,7 @@ package org.bazar.space.util.extension
 
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.model.GetUsersInSpaceResponse
+import org.bazar.space.model.SimpleRoleDto
 import org.bazar.space.model.UserInSpaceDto
 import org.bazar.space.persistence.entity.Space
 import org.bazar.space.util.rest.client.GetRoleNameDto
@@ -24,7 +25,9 @@ fun buildGetUsersInSpaceResponse(
             userIdToUserInfoMap[it]?.userName ?: "",
             userIdToUserInfoMap[it]?.firstName ?: "",
             userIdToUserInfoMap[it]?.lastName ?: "",
-            userIdToRoleNameMap[it]?.name ?: "UNKNOWN"
+            userIdToRoleNameMap[it]?.let { role ->
+                SimpleRoleDto(role.id, role.name, role.isVisible)
+            }
         )
     }
     return GetUsersInSpaceResponse(userList)

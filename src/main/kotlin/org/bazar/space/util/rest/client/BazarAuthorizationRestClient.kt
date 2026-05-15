@@ -72,7 +72,9 @@ data class GetRoleNamesResponse(
 )
 
 data class GetRoleNameDto(
+    val id: Long,
     val name: String,
-    val userId: String
+    val userId: String,
+    val isVisible: Boolean
 )
 
