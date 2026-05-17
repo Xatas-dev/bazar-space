@@ -1,9 +1,12 @@
 package org.bazar.space
 
+import org.bazar.authorization.sdk.BazarAuthorizationAdminClient
+import org.bazar.authorization.sdk.BazarAuthorizationClient
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase
 import org.testcontainers.containers.PostgreSQLContainer
@@ -15,6 +18,13 @@ import java.util.stream.Stream
 @ActiveProfiles("test")
 @Sql("classpath:db/scripts/clearTables.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
 abstract class BaseIntegrationTest {
+
+    @MockitoBean
+    lateinit var bazarAuthorizationClient: BazarAuthorizationClient
+
+    @MockitoBean
+    lateinit var bazarAuthorizationAdminClient: BazarAuthorizationAdminClient
+
 
     companion object {
 

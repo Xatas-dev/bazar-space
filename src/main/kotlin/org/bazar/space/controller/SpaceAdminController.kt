@@ -1,11 +1,13 @@
 package org.bazar.space.controller
 
+import org.bazar.authorization.sdk.Permission
 import org.bazar.space.api.SpaceAdminControllerApi
-import org.bazar.space.config.authorization.AuthorizationAction
-import org.bazar.space.config.authorization.SpacePreAuthorize
 import org.bazar.space.model.AddUserToSpaceDtoRequest
 import org.bazar.space.model.GetSpaceDto
-import org.bazar.space.service.SpaceManager
+import org.bazar.space.service.SpaceAdminApiService
+import org.bazar.space.service.authorization.SpaceAuthorizationService
+import org.bazar.space.service.authorization.SpaceAuthorizationServiceImpl
+import org.bazar.space.util.buildAuthorizationRequest
 import org.bazar.space.util.getAuthenticatedUserIdOrThrow
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,21 +16,22 @@ import java.util.*
 
 @RestController
 class SpaceAdminController(
-    final val spaceManager: SpaceManager
+    private val spaceAdminApiService: SpaceAdminApiService,
+    private val spaceAuthorizationService: SpaceAuthorizationService
 ) : SpaceAdminControllerApi {
 
     override fun addUserToSpace(addUserToSpaceDtoRequest: AddUserToSpaceDtoRequest): ResponseEntity<Unit> {
-        spaceManager.addUserToSpace(addUserToSpaceDtoRequest.userId, addUserToSpaceDtoRequest.spaceId)
+        spaceAdminApiService.addUserToSpace(addUserToSpaceDtoRequest.userId, addUserToSpaceDtoRequest.spaceId)
         return ResponseEntity.ok().build()
     }
 
     override fun createSpace(name: String): ResponseEntity<GetSpaceDto> {
-        val response = spaceManager.createSpace(getAuthenticatedUserIdOrThrow(), name)
+        val response = spaceAdminApiService.createSpace(getAuthenticatedUserIdOrThrow(), name)
         return ResponseEntity.ok(response)
     }
 
     override fun deleteSpace(@PathVariable spaceId: Long): ResponseEntity<Unit> {
-        spaceManager.deleteSpace(spaceId)
+        spaceAdminApiService.deleteSpace(spaceId)
         return ResponseEntity.ok().build()
     }
 
@@ -36,16 +39,16 @@ class SpaceAdminController(
         @PathVariable spaceId: Long,
         userId: UUID
     ): ResponseEntity<Unit> {
-        spaceManager.deleteUserFromSpace(spaceId, userId)
+        spaceAdminApiService.deleteUserFromSpace(spaceId, userId)
         return ResponseEntity.ok().build()
     }
 
-    @SpacePreAuthorize(action = AuthorizationAction.EDIT_SPACE)
     override fun patchSpace(
         @PathVariable spaceId: Long,
         name: String
     ): ResponseEntity<GetSpaceDto> {
-        val response = spaceManager.updateSpace(spaceId, name)
+        spaceAuthorizationService.authorizeOrThrow(buildAuthorizationRequest(spaceId, Permission.SPACE_WRITE))
+        val response = spaceAdminApiService.updateSpace(spaceId, name)
         return ResponseEntity.ok(response)
     }
 }

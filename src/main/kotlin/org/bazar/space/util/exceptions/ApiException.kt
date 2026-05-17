@@ -33,12 +33,10 @@ enum class ApiExceptions(
     FORBIDDEN("Insufficient permissions for this action", HttpStatus.FORBIDDEN),
     NOT_AUTHENTICATED("Not authenticated", HttpStatus.UNAUTHORIZED),
     SPACE_NOT_FOUND("Space %s not found", HttpStatus.UNAUTHORIZED),
+    USER_NOT_FOUND("User not found, userId: %s, spaceId: %s", HttpStatus.NOT_FOUND),
 
     //grpc
-    NOT_AUTHENTICATED_GRPC("(grpc) User is not authenticated", HttpStatus.UNAUTHORIZED),
     FORBIDDEN_GRPC("(grpc) Not enough permissions", HttpStatus.FORBIDDEN),
-    INTERNAL_ERROR_GRPC("(grpc) Unknown internal error. ", HttpStatus.INTERNAL_SERVER_ERROR),
-    NOT_FOUND_GRPC("(grpc) Not found", HttpStatus.NOT_FOUND)
 }
 
 

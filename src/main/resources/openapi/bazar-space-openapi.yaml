@@ -47,11 +47,11 @@ paths:
       responses:
         "200":
           description: OK
-  /space/{spaceId}/user:
+  /spaces/{spaceId}/users:
     get:
       tags:
         - space-controller
-      operationId: getAllUsersInSpace
+      operationId: getAllUsersInSpaceEnriched
       parameters:
         - name: spaceId
           in: path
@@ -65,10 +65,7 @@ paths:
           content:
             "application/json":
               schema:
-                type: array
-                items:
-                  type: string
-                  format: uuid
+                $ref: "#/components/schemas/GetUsersInSpaceResponse"
   /space/{spaceId}:
     delete:
       tags:
@@ -162,3 +159,58 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GetSpaceDto'
+
+    GetUsersInSpaceResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserInSpaceDto'
+
+    UserInSpaceDto:
+      type: object
+      required:
+        - userId
+        - spaceId
+        - userName
+        - firstName
+        - lastName
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+        spaceId:
+          type: integer
+          format: int64
+          description: Space ID
+        userName:
+          type: string
+          description: userName from bazar-persona/users
+        firstName:
+          type: string
+          description: firstName from bazar-persona/users
+        lastName:
+          type: string
+          description: lastName from bazar-persona/users
+        role:
+          type: object
+          $ref: '#/components/schemas/SimpleRoleDto'
+    SimpleRoleDto:
+      type: object
+      required:
+        - id
+        - name
+        - isVisible
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Role ID
+        name:
+          type: string
+          description: Role name
+        isVisible:
+          type: boolean
+          description: Is role visible on UI

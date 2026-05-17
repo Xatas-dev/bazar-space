@@ -1,9 +1,9 @@
 package org.bazar.space.service
 
-import org.bazar.space.entity.Space
+import org.bazar.space.persistence.entity.Space
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.model.GetSpacesResponse
-import org.bazar.space.repository.SpaceRepository
+import org.bazar.space.persistence.repository.SpaceRepository
 import org.bazar.space.util.exceptions.ApiException
 import org.bazar.space.util.exceptions.ApiExceptions
 import org.bazar.space.util.extension.toGetSpaceDto
@@ -35,6 +35,7 @@ class SpaceService(
         val space = spaceRepository.findById(spaceId)
             .orElseThrow { ApiException(ApiExceptions.SPACE_NOT_FOUND, spaceId) }
         space.name = name
+        spaceRepository.save(space)
         return GetSpaceDto(spaceId, name)
     }
 

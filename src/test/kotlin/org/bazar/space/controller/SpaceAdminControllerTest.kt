@@ -3,12 +3,15 @@ package org.bazar.space.controller
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.bazar.space.BaseWebTest
-import org.bazar.space.entity.Space
-import org.bazar.space.repository.SpaceRepository
-import org.bazar.space.repository.UserSpaceRepository
+import org.bazar.space.persistence.entity.Space
+import org.bazar.space.persistence.entity.UserSpace
+import org.bazar.space.persistence.repository.SpaceRepository
+import org.bazar.space.persistence.repository.UserSpaceRepository
 import org.bazar.space.utils.SpaceCreator
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.patch
@@ -31,6 +34,7 @@ class SpaceAdminControllerTest : BaseWebTest() {
     fun createSpaceWithName_ShouldReturnNewSpace() {
         //given
         val spaceName = "DOTA2"
+        doReturn(true).`when`(bazarAuthorizationClient).authorize(any())
         //when
         mockMvc.post("/space") {
             accept = APPLICATION_JSON
@@ -41,11 +45,15 @@ class SpaceAdminControllerTest : BaseWebTest() {
         }
         //then
         val spaces = spaceRepository.findAll()
+        val users = userRepository.findAll()
         assertThat(spaces)
             .hasSize(1)
             .extracting(Space::name)
             .containsExactlyInAnyOrder(tuple(spaceName))
-
+        assertThat(users)
+            .hasSize(1)
+        val user = users.first()
+        assertThat(user.creator).isTrue
     }
 
     @Test
@@ -54,6 +62,7 @@ class SpaceAdminControllerTest : BaseWebTest() {
         //given
         val newName = "DOTA2"
         val spaceInDb = spaceCreator.create()
+        doReturn(true).`when`(bazarAuthorizationClient).authorize(any())
         //when
         mockMvc.patch("/space/${spaceInDb.id}") {
             accept = APPLICATION_JSON

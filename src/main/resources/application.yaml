@@ -5,10 +5,6 @@ spring:
     password: ${DB_PASS:postgres}
   liquibase:
     change-log: db/changelog/changelog-master.yaml
-  grpc:
-    client:
-      default-channel:
-        address: ${BAZAR_AUTHORIZATION_GRPC_URL:localhost:9090}
   security:
     oauth2:
         resourceserver:
@@ -17,6 +13,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  cache:
+    type: caffeine
 server:
   servlet:
     context-path: /api
@@ -28,3 +26,10 @@ logging:
   level:
     org:
       bazar: ${LOGGING_LEVEL:DEBUG}
+authorization:
+  port: ${BAZAR_AUTHORIZATION_PORT:9090}
+  host: ${BAZAR_AUTHORIZATION_HOST:localhost}
+rest:
+  clients:
+    bazar-persona-url: ${BAZAR_PERSONA_API_URL:http://localhost:8081/api}
+    bazar-authz-url: ${BAZAR_AUTHORIZATION_API_URL:http://localhost:8082/api}

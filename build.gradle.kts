@@ -1,21 +1,17 @@
-import com.google.protobuf.gradle.id
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("plugin.spring") version "2.2.21"
-    id("org.springframework.boot") version "4.0.1"
+    id("org.springframework.boot") version "4.0.3"
     id("io.spring.dependency-management") version "1.1.7"
-    id("org.springframework.boot.aot") version "3.0.6"
-    id("com.google.protobuf") version "0.9.5"
     id("org.openapi.generator") version "7.2.0"
-    kotlin("plugin.jpa") version "2.2.21"
 }
 val springGrpcVersion by extra("1.0.0")
 
 group = "org.bazar"
-version = "1.0.1"
+version = "1.0.2"
 description = "bazar-space"
 
 java {
@@ -26,37 +22,50 @@ java {
 
 repositories {
     mavenCentral()
+    mavenLocal()
+    maven {
+        url = uri("https://maven.pkg.github.com/Xatas-dev/bazar-authorization-sdk")
+        credentials {
+            password = System.getenv("GITHUB_TOKEN")
+                ?: project.findProperty("gpr.token") as String?
+            username = System.getenv("GITHUB_ACTOR")
+                ?: project.findProperty("gpr.user") as String?
+        }
+    }
 }
 
-extra["springGrpcVersion"] = "1.0.0"
 val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     // Mockito agent fix
     testImplementation("org.mockito:mockito-core:5.20.0")
     mockitoAgent("org.mockito:mockito-core:5.20.0") { isTransitive = false }
 
     //security
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
+    implementation("org.bazar:bazar-authorization-sdk:1.0.0")
 
     //Observability
     implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
-    //gRPC
-    implementation("io.grpc:grpc-services")
-    testImplementation("org.springframework.grpc:spring-grpc-test")
-    implementation("org.springframework.grpc:spring-grpc-spring-boot-starter")
-
     //DB
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
-    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     runtimeOnly("org.postgresql:postgresql")
 
     //Web
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+
+
+    //Cache
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
+    //HTTP Client
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:5.0.0")
+
     //Else
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -76,7 +85,7 @@ kotlin {
 }
 
 openApiValidate {
-    inputSpec = "$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml".toString()
+    inputSpec = "$rootDir/src/main/resources/openapi/bazar-space-openapi.yaml"
     recommend = true
 }
 
@@ -107,26 +116,6 @@ openApiGenerate {
 sourceSets {
     main {
         kotlin.srcDir("${layout.buildDirectory.locationOnly.get()}/generated/openapi/src/main/kotlin")
-    }
-}
-
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc"
-    }
-    plugins {
-        id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java"
-        }
-    }
-    generateProtoTasks {
-        all().forEach {
-            it.plugins {
-                id("grpc") {
-                    option("@generated=omit")
-                }
-            }
-        }
     }
 }
 
