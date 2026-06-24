@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SpaceEvent",
+  "type": "object",
+  "required": [
+    "payload"
+  ],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "description": "Event-specific data",
+      "properties": {
+        "eventType": {
+          "type": "string",
+          "enum": [
+            "DELETE"
+          ],
+          "description": "Type of domain event"
+        },
+        "spaceId": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
