@@ -37,10 +37,12 @@ repositories {
 val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     // Mockito agent fix
     testImplementation("org.mockito:mockito-core:5.20.0")
     mockitoAgent("org.mockito:mockito-core:5.20.0") { isTransitive = false }
+
+    //kafka
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
 
     //security
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
@@ -52,6 +54,7 @@ dependencies {
 
     //DB
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     runtimeOnly("org.postgresql:postgresql")
 
     //Web
@@ -76,6 +79,9 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:postgresql:1.21.0")
+    testImplementation("org.testcontainers:kafka:1.21.0")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
 }
 
 kotlin {
