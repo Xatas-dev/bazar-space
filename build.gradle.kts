@@ -11,7 +11,7 @@ plugins {
 val springGrpcVersion by extra("1.0.0")
 
 group = "org.bazar"
-version = "1.0.2"
+version = "1.0.3"
 description = "bazar-space"
 
 java {
@@ -55,7 +55,7 @@ dependencies {
     //DB
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
-    runtimeOnly("org.postgresql:postgresql")
+    implementation("org.postgresql:postgresql")
 
     //Web
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
