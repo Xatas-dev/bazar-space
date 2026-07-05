@@ -36,6 +36,7 @@ class OutboxRepositoryAdapterImpl(
         }
     }
 
+    @Transactional
     override fun resetLock(threshold: Duration): Int {
         return outboxRepository.resetLock(threshold, batchSize)
     }

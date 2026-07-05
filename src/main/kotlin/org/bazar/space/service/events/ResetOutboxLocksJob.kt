@@ -1,5 +1,6 @@
 package org.bazar.space.service.events
 
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.bazar.space.persistence.repository.adapter.OutboxRepositoryAdapter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -10,19 +11,26 @@ import java.time.Duration
 @Component
 @ConditionalOnProperty(value = ["app.jobs.reset-outbox-locks.enabled"], havingValue = "true")
 class ResetOutboxLocksJob(
-    private val outboxRepositoryAdapter: OutboxRepositoryAdapter
+    private val outboxRepositoryAdapter: OutboxRepositoryAdapter,
+
+    @Value($$"${app.jobs.reset-outbox-locks.max-per-run}")
+    private var maxPerRun: Int,
+    @Value($$"${app.jobs.reset-outbox-locks.threshold}")
+    private var threshold: Duration
 ) {
 
-    @Value($$"${app.jobs.reset-outbox-locks.threshold}")
-    private lateinit var threshold: Duration
+    private val log = logger("reset-outbox-locks-job")
 
     @Scheduled(fixedDelay = 30000)
     fun run() {
-
+        log.debug { "Starting reset outbox locks job" }
+        var totalRowsAffected = 0
         do {
             val affectedRows = outboxRepositoryAdapter.resetLock(threshold)
-        } while (affectedRows > 0)
-
+            totalRowsAffected += affectedRows
+            log.debug { "Affected $affectedRows, total rows affected $totalRowsAffected" }
+        } while (affectedRows > 0 && totalRowsAffected < maxPerRun)
+        log.debug { "Ending reset outbox locks job" }
     }
 
 

@@ -5,6 +5,7 @@ app:
     reset-outbox-locks:
       enabled: true
       threshold: 60000
+      max-per-run: 5000
     space-outbox:
       enabled: true
 spring:

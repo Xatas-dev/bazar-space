@@ -4,6 +4,7 @@ import org.bazar.space.model.events.EntityEventWrapper
 import org.bazar.space.persistence.entity.Outbox
 import org.bazar.space.persistence.entity.enums.OutboxStatus
 import org.bazar.space.persistence.repository.OutboxRepository
+import org.bazar.space.persistence.repository.adapter.OutboxRepositoryAdapter
 import org.bazar.space.service.events.EventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
@@ -12,7 +13,7 @@ import tools.jackson.databind.ObjectMapper
 
 @Service
 class OutboxEventPublisher(
-    private val outboxRepository: OutboxRepository,
+    private val outboxRepository: OutboxRepositoryAdapter,
     private val objectMapper: ObjectMapper
 ) : EventPublisher {
 
