@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: 20260629-00-0-create-outbox.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 20260705-00-0-create-indexes-outbox-table.sql
+      relativeToChangelogFile: true

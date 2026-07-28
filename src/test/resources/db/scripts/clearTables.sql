@@ -1,1 +1,1 @@
-truncate table space, user_space;
+truncate table space, user_space, outbox;
