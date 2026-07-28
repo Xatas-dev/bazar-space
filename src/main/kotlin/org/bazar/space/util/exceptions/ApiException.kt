@@ -1,7 +1,5 @@
 package org.bazar.space.util.exceptions
 
-import org.springframework.http.HttpStatus
-
 
 class ApiException(
     val exceptionType: ApiExceptions,
@@ -26,19 +24,16 @@ class ApiException(
 }
 
 enum class ApiExceptions(
-    val message: String,
-    val httpStatus: HttpStatus
+    val message: String
 ) {
-    //business
-    FORBIDDEN("Insufficient permissions for this action", HttpStatus.FORBIDDEN),
-    NOT_AUTHENTICATED("Not authenticated", HttpStatus.UNAUTHORIZED),
-    SPACE_NOT_FOUND("Space %s not found", HttpStatus.UNAUTHORIZED),
-    USER_NOT_FOUND("User not found, userId: %s, spaceId: %s", HttpStatus.NOT_FOUND),
+    FORBIDDEN("Insufficient permissions for this action"),
+    NOT_AUTHENTICATED("Not authenticated"),
+    SPACE_NOT_FOUND("Space %s not found"),
+    USER_NOT_FOUND("User not found, userId: %s, spaceId: %s"),
 
-    //external systems
-    AUTHORIZATION_SERVICE_ERROR("Authorization server error", HttpStatus.INTERNAL_SERVER_ERROR),
-    FORBIDDEN_GRPC("(grpc) Not enough permissions", HttpStatus.FORBIDDEN),
-    KAFKA_SENDING_EXCEPTION("Couldn't produce message to kafka topic: %s a record: %s", HttpStatus.INTERNAL_SERVER_ERROR)
+    AUTHORIZATION_SERVICE_ERROR("Authorization server error"),
+    FORBIDDEN_GRPC("(grpc) Not enough permissions"),
+    KAFKA_SENDING_EXCEPTION("Couldn't produce message to kafka topic: %s a record: %s")
 
 }
 

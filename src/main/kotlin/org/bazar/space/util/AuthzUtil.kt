@@ -1,11 +1,12 @@
 package org.bazar.space.util
 
-import org.bazar.authorization.sdk.*
-import java.util.*
+import org.bazar.authorization.sdk.AuthorizationRequest
+import org.bazar.authorization.sdk.Permission
 
 fun buildAuthorizationRequest(
     spaceId: Long,
     permission: Permission,
+    jwtToken: String,
     resourceId: String = "",
     principalAttributes: Map<String, String> = emptyMap(),
     resourceAttributes: Map<String, String> = emptyMap()
@@ -16,27 +17,5 @@ fun buildAuthorizationRequest(
         .resourceId(resourceId)
         .principalAttributes(principalAttributes)
         .resourceAttributes(resourceAttributes)
-        .bearerToken(getCurrentJwt())
-        .build()
-
-fun buildCreateUserRequest(userId: UUID, spaceId: Long, creator: Boolean): CreateUserRequest =
-    CreateUserRequest.builder()
-        .userId(userId.toString())
-        .spaceId(spaceId)
-        .creator(creator)
-        .bearerToken(getCurrentJwt())
-        .build()
-
-fun buildDeleteUserRequest(userId: UUID, spaceId: Long, isCreator: Boolean): DeleteUserRequest =
-    DeleteUserRequest.builder()
-        .userId(userId.toString())
-        .spaceId(spaceId)
-        .isCreator(isCreator)
-        .bearerToken(getCurrentJwt())
-        .build()
-
-fun buildDeleteSpaceRequest(spaceId: Long): DeleteSpaceRequest =
-    DeleteSpaceRequest.builder()
-        .spaceId(spaceId)
-        .bearerToken(getCurrentJwt())
+        .bearerToken(jwtToken)
         .build()
