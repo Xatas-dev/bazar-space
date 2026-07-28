@@ -2,10 +2,10 @@ package org.bazar.space.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.bazar.space.model.GetSpaceDto
-import org.bazar.space.model.kafka.produce.EventType
-import org.bazar.space.model.kafka.produce.SpaceEvent
+import org.bazar.space.model.kafka.produce.space.SpaceEventType
+import org.bazar.space.model.kafka.produce.space.buildSpaceEvent
 import org.bazar.space.service.authorization.SpaceAuthorizationService
-import org.bazar.space.service.kafka.SpaceEventPublisher
+import org.bazar.space.service.events.EventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -15,7 +15,7 @@ class SpaceAdminApiService(
     private val spaceService: SpaceService,
     private val userSpaceService: UserSpaceService,
     private val spaceAuthorizationService: SpaceAuthorizationService,
-    private val spaceEventPublisher: SpaceEventPublisher,
+    private val eventPublisher: EventPublisher,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -49,8 +49,8 @@ class SpaceAdminApiService(
     fun deleteSpace(spaceId: Long) {
         userSpaceService.deleteAllBySpaceId(spaceId)
         spaceService.deleteSpaceById(spaceId)
+        eventPublisher.publish(buildSpaceEvent(spaceId, SpaceEventType.DELETE))
         spaceAuthorizationService.deleteSpaceInAuthz(spaceId)
-        spaceEventPublisher.send(SpaceEvent(EventType.DELETE, spaceId))
         logger.info { "Deleted space=$spaceId" }
     }
 

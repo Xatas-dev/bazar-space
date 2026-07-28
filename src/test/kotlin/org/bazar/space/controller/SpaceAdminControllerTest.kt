@@ -9,12 +9,15 @@ import org.awaitility.kotlin.withPollInterval
 import org.bazar.space.BaseWebTest
 import org.bazar.space.config.kafka.KafkaProperties
 import org.bazar.space.config.kafka.KafkaTestConsumer
-import org.bazar.space.model.kafka.produce.EventType
-import org.bazar.space.model.kafka.produce.SpaceEvent
+import org.bazar.space.model.kafka.produce.space.SpaceEvent
+import org.bazar.space.model.kafka.produce.space.SpaceEventType
+import org.bazar.space.persistence.entity.Outbox
 import org.bazar.space.persistence.entity.Space
+import org.bazar.space.persistence.entity.enums.OutboxStatus
 import org.bazar.space.persistence.repository.SpaceRepository
 import org.bazar.space.persistence.repository.UserSpaceRepository
 import org.bazar.space.utils.SpaceCreator
+import org.bazar.space.utils.repository.JdbcTestHelper
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
@@ -25,6 +28,8 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import java.time.Duration
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 
 class SpaceAdminControllerTest : BaseWebTest() {
@@ -34,6 +39,9 @@ class SpaceAdminControllerTest : BaseWebTest() {
 
     @Autowired
     lateinit var userRepository: UserSpaceRepository
+
+    @Autowired
+    lateinit var jdbcTestHelper: JdbcTestHelper
 
     @Autowired
     lateinit var spaceCreator: SpaceCreator
@@ -98,7 +106,7 @@ class SpaceAdminControllerTest : BaseWebTest() {
     fun deleteSpace_ShouldDelete() {
         //given
         val spaceInDb = spaceCreator.create()
-        val testConsumer = KafkaTestConsumer<String, SpaceEvent>(kafkaProperties.producers["space-events"]!!.name)
+        val testConsumer = KafkaTestConsumer(kafkaProperties.producers["space-events"]!!.name, SpaceEvent::class.java)
         doReturn(true).`when`(bazarAuthorizationClient).authorize(any())
         //when
         mockMvc.delete("/space/${spaceInDb.id}") {
@@ -117,9 +125,22 @@ class SpaceAdminControllerTest : BaseWebTest() {
             }.apply {
                 assertThat(this.value())
                     .usingRecursiveAssertion()
-                    .isEqualTo(SpaceEvent(eventType = EventType.DELETE, spaceId = spaceInDb.id!!))
+                    .isEqualTo(SpaceEvent(type = SpaceEventType.DELETE, spaceId = spaceInDb.id!!))
             }
         }
+
+        val outboxes = jdbcTestHelper.findAll<Outbox>("outbox")
+        assertThat(outboxes)
+            .hasSize(1)
+
+        outboxes.first().apply {
+            assertEquals(entityId, spaceInDb.id)
+            assertEquals(status, OutboxStatus.DONE)
+            assertTrue {
+                updatedAt.isAfter(createdAt)
+            }
+        }
+
     }
 
 }
