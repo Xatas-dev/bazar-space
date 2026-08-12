@@ -1,9 +1,9 @@
-package org.bazar.space.config.kafka
+package org.bazar.space.infrastructure.config.kafka
 
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.bazar.space.config.SharedAppContext
+import org.bazar.space.infrastructure.config.SharedAppContext
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer
 import org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps

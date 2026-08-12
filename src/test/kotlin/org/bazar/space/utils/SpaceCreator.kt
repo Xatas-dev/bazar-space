@@ -1,7 +1,7 @@
-package org.bazar.space.utils
+package org.bazar.space.infrastructure.utils
 
-import org.bazar.space.infrastructure.persistence.entity.SpaceEntity
-import org.bazar.space.infrastructure.persistence.repository.SpaceEntityRepository
+import org.bazar.space.adapter.outbound.space.persistence.SpaceEntity
+import org.bazar.space.adapter.outbound.space.persistence.SpaceEntityRepository
 import org.springframework.stereotype.Component
 
 @Component

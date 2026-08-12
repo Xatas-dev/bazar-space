@@ -2,10 +2,10 @@ package org.bazar.space.infrastructure.event
 
 import org.assertj.core.api.Assertions.assertThat
 import org.bazar.space.BaseIntegrationTest
-import org.bazar.space.infrastructure.event.job.ResetOutboxLocksJob
-import org.bazar.space.infrastructure.persistence.entity.Outbox
-import org.bazar.space.infrastructure.persistence.entity.OutboxStatus
-import org.bazar.space.infrastructure.persistence.repository.outbox.OutboxRepositoryAdapter
+import org.bazar.space.adapter.outbound.shared.job.ResetOutboxLocksJob
+import org.bazar.space.adapter.outbound.shared.outbox.OutboxEntity
+import org.bazar.space.adapter.outbound.shared.outbox.OutboxStatus
+import org.bazar.space.adapter.outbound.shared.outbox.OutboxRepositoryAdapter
 import org.bazar.space.utils.repository.JdbcTestHelper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -29,7 +29,7 @@ class ResetOutboxLocksJobTest : BaseIntegrationTest() {
         //given
         val outboxStuckTimestamp = Instant.now().minusSeconds(120)
         outboxRepositoryAdapter.insertAll(listOf(
-            Outbox(
+            OutboxEntity(
                 entity = "SPACE",
                 entityId = 1L,
                 payload = "{}",
@@ -43,11 +43,11 @@ class ResetOutboxLocksJobTest : BaseIntegrationTest() {
 
         //then
 
-        val outboxes = jdbcTestHelper.findAll<Outbox>("outbox")
+        val outboxes = jdbcTestHelper.findAll<OutboxEntity>("outbox")
         assertThat(outboxes).hasSize(1)
 
         outboxes.first().apply {
-            assertEquals(status, OutboxStatus.NEW)
+            assertEquals(OutboxStatus.NEW, status)
             assertTrue { updatedAt > outboxStuckTimestamp }
         }
     }
@@ -56,7 +56,7 @@ class ResetOutboxLocksJobTest : BaseIntegrationTest() {
     fun testResetOutboxLocksJob_shouldNotAffectFreshOutboxes() {
         //given
         outboxRepositoryAdapter.insertAll(listOf(
-            Outbox(
+            OutboxEntity(
                 entity = "SPACE",
                 entityId = 1L,
                 payload = "{}",
@@ -69,11 +69,11 @@ class ResetOutboxLocksJobTest : BaseIntegrationTest() {
 
         //then
 
-        val outboxes = jdbcTestHelper.findAll<Outbox>("outbox")
+        val outboxes = jdbcTestHelper.findAll<OutboxEntity>("outbox")
         assertThat(outboxes).hasSize(1)
 
         outboxes.first().apply {
-            assertEquals(status, OutboxStatus.IN_PROGRESS)
+            assertEquals(OutboxStatus.IN_PROGRESS, status)
         }
     }
 

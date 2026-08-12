@@ -5,11 +5,11 @@ import org.bazar.space.BaseWebTest
 import org.bazar.space.model.GetUsersInSpaceResponse
 import org.bazar.space.model.SimpleRoleDto
 import org.bazar.space.model.UserInSpaceDto
-import org.bazar.space.domain.port.GetRoleNameDto
-import org.bazar.space.domain.port.UserPersonaDto
-import org.bazar.space.infrastructure.client.GetRoleNamesResponse
-import org.bazar.space.infrastructure.client.BazarAuthorizationFeignClient
-import org.bazar.space.infrastructure.client.BazarPersonaFeignClient
+import org.bazar.space.application.userspace.port.out.GetRoleNameDto
+import org.bazar.space.application.userspace.port.out.UserPersonaDto
+import org.bazar.space.adapter.outbound.client.GetRoleNamesResponse
+import org.bazar.space.adapter.outbound.client.BazarAuthorizationFeignClient
+import org.bazar.space.adapter.outbound.client.BazarPersonaFeignClient
 import org.bazar.space.utils.InitDataHelper
 import org.junit.jupiter.api.DisplayName
 import org.mockito.Mockito.`when` as whenever

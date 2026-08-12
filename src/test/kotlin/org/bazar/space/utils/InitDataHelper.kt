@@ -1,9 +1,9 @@
 package org.bazar.space.utils
 
-import org.bazar.space.infrastructure.persistence.entity.SpaceEntity
-import org.bazar.space.infrastructure.persistence.entity.UserSpaceEntity
-import org.bazar.space.infrastructure.persistence.repository.SpaceEntityRepository
-import org.bazar.space.infrastructure.persistence.repository.UserSpaceEntityRepository
+import org.bazar.space.adapter.outbound.space.persistence.SpaceEntity
+import org.bazar.space.adapter.outbound.space.persistence.SpaceEntityRepository
+import org.bazar.space.adapter.outbound.userspace.persistence.UserSpaceEntity
+import org.bazar.space.adapter.outbound.userspace.persistence.UserSpaceEntityRepository
 import org.springframework.stereotype.Component
 import java.util.*
 
