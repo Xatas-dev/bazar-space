@@ -1,4 +1,4 @@
-package org.bazar.space.config
+package org.bazar.space.infrastructure.config
 
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.kafka.ConfluentKafkaContainer

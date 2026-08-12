@@ -6,8 +6,8 @@ import org.springframework.cache.annotation.EnableCaching
 import org.springframework.cloud.openfeign.EnableFeignClients
 import org.springframework.scheduling.annotation.EnableScheduling
 
-@SpringBootApplication
-@EnableFeignClients
+@SpringBootApplication(scanBasePackages = ["org.bazar.space"])
+@EnableFeignClients(basePackages = ["org.bazar.space"])
 @EnableCaching
 @EnableScheduling
 class BazarSpaceApplication

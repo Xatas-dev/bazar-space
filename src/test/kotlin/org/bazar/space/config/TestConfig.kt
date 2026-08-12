@@ -1,4 +1,4 @@
-package org.bazar.space.config
+package org.bazar.space.infrastructure.config
 
 import org.bazar.space.utils.repository.JdbcTestHelper
 import org.springframework.boot.test.context.TestConfiguration

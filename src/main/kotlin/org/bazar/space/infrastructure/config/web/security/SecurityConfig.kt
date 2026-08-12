@@ -1,0 +1,79 @@
+package org.bazar.space.infrastructure.config.web.security
+
+import org.bazar.space.infrastructure.security.LocalJwtInjectorFilter
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
+import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.access.intercept.AuthorizationFilter
+
+
+@Configuration
+class SecurityConfig(
+    @Value($$"${management.server.port}") private val managementPort: Int,
+    @Value($$"${server.port}") private val serverPort: Int
+) {
+
+    @Bean
+    @Profile("!local && !test")
+    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http
+            .securityMatcher { request -> request.localPort == serverPort }
+            .csrf { csrf ->
+                csrf.disable()
+            }
+            .authorizeHttpRequests { authz ->
+                authz
+                    .anyRequest().authenticated()
+            }
+            .sessionManagement { session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+            .oauth2ResourceServer { oauth2 ->
+                oauth2.jwt { }
+            }
+
+        return http.build()
+    }
+
+    @Bean
+    @Profile("local", "test")
+    fun localSecurityFilterChain(
+        http: HttpSecurity,
+        localJwtInjectorFilter: LocalJwtInjectorFilter
+    ): SecurityFilterChain {
+        http
+            .authorizeHttpRequests { it.anyRequest().permitAll() }
+            .csrf { it.disable() }
+            .sessionManagement { session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+            .addFilterBefore(localJwtInjectorFilter, AuthorizationFilter::class.java)
+
+        return http.build()
+    }
+
+    @Bean
+    @Profile("!local && !test")
+    fun managementSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http
+            .securityMatcher { request ->
+                request.localPort == managementPort
+            }
+            .csrf { csrf ->
+                csrf.disable()
+            }
+            .authorizeHttpRequests { authz ->
+                authz
+                    .anyRequest().permitAll()
+            }
+            .sessionManagement { session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+
+        return http.build()
+    }
+}
