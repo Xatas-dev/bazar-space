@@ -82,6 +82,7 @@ dependencies {
     testImplementation("org.testcontainers:kafka:1.21.0")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.0")
 }
 
 kotlin {
