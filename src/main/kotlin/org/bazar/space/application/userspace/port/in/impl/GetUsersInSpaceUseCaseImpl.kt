@@ -3,8 +3,8 @@ package org.bazar.space.application.userspace.port.`in`.impl
 import org.bazar.space.application.port.`in`.GetUsersInSpaceUseCase
 import org.bazar.space.application.userspace.query.GetUsersInSpaceQuery
 import org.bazar.space.domain.space.SpaceMembership
-import org.bazar.space.domain.userspace.RoleInfo
-import org.bazar.space.domain.userspace.UserInSpace
+import org.bazar.space.application.userspace.RoleInfo
+import org.bazar.space.application.userspace.UserInSpace
 import org.bazar.space.application.userspace.port.out.RoleInfoProvider
 import org.bazar.space.application.userspace.port.out.UserInfoProvider
 import org.bazar.space.application.userspace.port.out.UserSpaceRepositoryPort
@@ -25,15 +25,16 @@ class GetUsersInSpaceUseCaseImpl(
         val userIdToUserInfoMap = userInfoProvider.getUsersByIds(userIds)
         val userIdToRoleNameMap = roleInfoProvider.getRoleNames(query.spaceId, userIds)
 
-        return userIds.map { userId ->
-            val persona = userIdToUserInfoMap[userId]
-            val role = userIdToRoleNameMap[userId]
+        return members.map { member ->
+            val persona = userIdToUserInfoMap[member.userId]
+            val role = userIdToRoleNameMap[member.userId]
             UserInSpace(
-                userId = userId,
+                userId = member.userId,
                 spaceId = query.spaceId,
                 userName = persona?.userName ?: "",
                 firstName = persona?.firstName ?: "",
                 lastName = persona?.lastName ?: "",
+                creator = member.creator,
                 role = role?.let { RoleInfo(it.id, it.name, it.isVisible) }
             )
         }
