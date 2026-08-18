@@ -1,4 +1,4 @@
-package org.bazar.space.domain.userspace
+package org.bazar.space.application.userspace
 
 import java.util.UUID
 
@@ -8,6 +8,7 @@ data class UserInSpace(
     val userName: String,
     val firstName: String,
     val lastName: String,
+    val creator: Boolean,
     val role: RoleInfo?
 )
 
