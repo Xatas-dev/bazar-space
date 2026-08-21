@@ -66,7 +66,7 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/GetUsersInSpaceResponse"
-  /spaces/{spaceId}/users/{userId}:
+  /spaces/{spaceId}/users/{userId}/raw:
     get:
       tags:
         - space-controller
@@ -90,7 +90,7 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/UserInSpaceDto"
+                $ref: "#/components/schemas/UserInSpaceRawDto"
   /space/{spaceId}:
     delete:
       tags:
@@ -192,7 +192,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserInSpaceDto'
-
+    UserInSpaceRawDto:
+      type: object
+      required:
+        - userId
+        - spaceId
+        - creator
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+        spaceId:
+          type: integer
+          format: int64
+          description: Space ID
+        creator:
+          type: boolean
+          description: Is user creator of the space
     UserInSpaceDto:
       type: object
       required:
