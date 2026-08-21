@@ -2,7 +2,7 @@ package org.bazar.space.adapter.inbound.rest
 
 import org.bazar.space.api.SpaceControllerApi
 import org.bazar.space.application.port.`in`.GetSpacesUseCase
-import org.bazar.space.application.userspace.port.`in`.GetUserInSpaceUseCase
+import org.bazar.space.application.userspace.port.`in`.GetRawUserInSpaceUseCase
 import org.bazar.space.application.port.`in`.GetUsersInSpaceUseCase
 import org.bazar.space.application.shared.port.out.CurrentUserProvider
 import org.bazar.space.application.space.query.GetSpacesQuery
@@ -10,7 +10,7 @@ import org.bazar.space.application.userspace.query.GetUserInSpaceQuery
 import org.bazar.space.application.userspace.query.GetUsersInSpaceQuery
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.model.GetUsersInSpaceResponse
-import org.bazar.space.model.UserInSpaceDto
+import org.bazar.space.model.UserInSpaceRawDto
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
@@ -20,7 +20,7 @@ import java.util.UUID
 class SpaceController(
     private val getSpacesUseCase: GetSpacesUseCase,
     private val getUsersInSpaceUseCase: GetUsersInSpaceUseCase,
-    private val getUserInSpaceUseCase: GetUserInSpaceUseCase,
+    private val getRawUserInSpaceUseCase: GetRawUserInSpaceUseCase,
     private val currentUser: CurrentUserProvider,
 ) : SpaceControllerApi {
 
@@ -34,8 +34,8 @@ class SpaceController(
         return ResponseEntity.ok(users.toGetUsersInSpaceResponse())
     }
 
-    override fun getUserInSpace(@PathVariable spaceId: Long, @PathVariable userId: UUID): ResponseEntity<UserInSpaceDto> {
-        val user = getUserInSpaceUseCase.execute(GetUserInSpaceQuery(spaceId, userId, currentUser.id))
-        return ResponseEntity.ok(user.toUserInSpaceDto())
+    override fun getUserInSpace(@PathVariable spaceId: Long, @PathVariable userId: UUID): ResponseEntity<UserInSpaceRawDto> {
+        val user = getRawUserInSpaceUseCase.execute(GetUserInSpaceQuery(spaceId, userId, currentUser.id))
+        return ResponseEntity.ok(user.toUserInSpaceRawDto())
     }
 }

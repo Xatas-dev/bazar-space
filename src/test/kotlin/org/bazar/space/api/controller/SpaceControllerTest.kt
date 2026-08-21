@@ -10,6 +10,7 @@ import org.bazar.space.application.userspace.port.out.UserPersonaDto
 import org.bazar.space.adapter.outbound.client.GetRoleNamesResponse
 import org.bazar.space.adapter.outbound.client.BazarAuthorizationFeignClient
 import org.bazar.space.adapter.outbound.client.BazarPersonaFeignClient
+import org.bazar.space.model.UserInSpaceRawDto
 import org.bazar.space.utils.InitDataHelper
 import org.junit.jupiter.api.DisplayName
 import org.mockito.Mockito.`when` as whenever
@@ -130,144 +131,64 @@ class SpaceControllerTest: BaseWebTest() {
     }
 
     @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}, should return enriched user and call external API only once")
+    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw, should return enriched user and call external API only once")
     fun getUserInSpace_shouldReturnOk() {
         //given
         val spaceId = initDataHelper.createSpace()
         initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
         val requestedUser = initDataHelper.createUser(spaceId, UUID.randomUUID(), true)
 
-        val mockPersonaResponse = List(1) {
-            UserPersonaDto(
-                requestedUser.userId,
-                "requestedUser",
-                "requestedUser@example.com",
-                "RequestedFirstName",
-                "RequestedLastName"
-            )
-        }
-
-        val mockAuthorizationResponse = GetRoleNamesResponse(
-            List(1) {
-                GetRoleNameDto(
-                    42L,
-                    "CustomRole",
-                    requestedUser.userId.toString(),
-                    true
-                )
-            }
-        )
-
-        whenever(bazarPersonaFeignClient.getUsersByIds(anyList())).thenReturn(mockPersonaResponse)
-        whenever(bazarAuthorizationFeignClient.getRoleNames(anyLong(), anyList())).thenReturn(mockAuthorizationResponse)
-
         //when
-        val actualResponse = mockMvc.get("/spaces/$spaceId/users/${requestedUser.userId}")
+        val actualResponse = mockMvc.get("/spaces/$spaceId/users/${requestedUser.userId}/raw")
             .andExpect {
                 status { isOk() }
             }.andReturn().response.contentAsString
-        val actualResponseDto = objectMapper.readValue(actualResponse, UserInSpaceDto::class.java)
+        val actualResponseDto = objectMapper.readValue(actualResponse, UserInSpaceRawDto::class.java)
 
         //then
         assertThat(actualResponseDto).isEqualTo(
-            UserInSpaceDto(
+            UserInSpaceRawDto(
                 requestedUser.userId,
                 spaceId,
-                mockPersonaResponse[0].userName,
-                mockPersonaResponse[0].firstName,
-                mockPersonaResponse[0].lastName,
-                requestedUser.creator,
-                SimpleRoleDto(
-                    mockAuthorizationResponse.roles[0].id,
-                    mockAuthorizationResponse.roles[0].name,
-                    mockAuthorizationResponse.roles[0].isVisible
-                )
+                requestedUser.creator
             )
         )
-        verify(bazarAuthorizationFeignClient, times(1)).getRoleNames(anyLong(), anyList())
-        verify(bazarPersonaFeignClient, times(1)).getUsersByIds(anyList())
     }
 
     @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId} for authenticated user himself, should return enriched user")
+    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw for authenticated user himself, should return enriched user")
     fun getUserInSpace_shouldReturnOk_whenAuthenticatedUserRequestsHimself() {
         //given
         val spaceId = initDataHelper.createSpace()
         val authenticatedUserId = UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7")
         initDataHelper.createUser(spaceId, authenticatedUserId, creator = true)
 
-        val mockPersonaResponse = List(1) {
-            UserPersonaDto(
-                authenticatedUserId,
-                "authenticatedUser",
-                "authenticatedUser@example.com",
-                "AuthenticatedFirstName",
-                "AuthenticatedLastName"
-            )
-        }
-
-        val mockAuthorizationResponse = GetRoleNamesResponse(
-            List(1) {
-                GetRoleNameDto(
-                    42L,
-                    "CustomRole",
-                    authenticatedUserId.toString(),
-                    true
-                )
-            }
-        )
-
-        whenever(bazarPersonaFeignClient.getUsersByIds(anyList())).thenReturn(mockPersonaResponse)
-        whenever(bazarAuthorizationFeignClient.getRoleNames(anyLong(), anyList())).thenReturn(mockAuthorizationResponse)
-
         //when
-        val actualResponse = mockMvc.get("/spaces/$spaceId/users/$authenticatedUserId")
+        val actualResponse = mockMvc.get("/spaces/$spaceId/users/$authenticatedUserId/raw")
             .andExpect {
                 status { isOk() }
             }.andReturn().response.contentAsString
-        val actualResponseDto = objectMapper.readValue(actualResponse, UserInSpaceDto::class.java)
+        val actualResponseDto = objectMapper.readValue(actualResponse, UserInSpaceRawDto::class.java)
 
         //then
         assertThat(actualResponseDto).isEqualTo(
-            UserInSpaceDto(
+            UserInSpaceRawDto(
                 authenticatedUserId,
                 spaceId,
-                mockPersonaResponse[0].userName,
-                mockPersonaResponse[0].firstName,
-                mockPersonaResponse[0].lastName,
-                true,
-                SimpleRoleDto(
-                    mockAuthorizationResponse.roles[0].id,
-                    mockAuthorizationResponse.roles[0].name,
-                    mockAuthorizationResponse.roles[0].isVisible
-                )
+                true
             )
         )
     }
 
     @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}, should return 403 due to lack of permission")
-    fun getUserInSpace_shouldReturn403() {
-        //given
-        val spaceId = initDataHelper.createSpace()
-        val requestedUser = initDataHelper.createUser(spaceId)
-
-        //when and then
-        mockMvc.get("/spaces/$spaceId/users/${requestedUser.userId}")
-            .andExpect {
-                status { isForbidden() }
-            }
-    }
-
-    @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}, should return 404 when user is not member of the space")
+    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw, should return 404 when user is not member of the space")
     fun getUserInSpace_shouldReturn404() {
         //given
         val spaceId = initDataHelper.createSpace()
         initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
 
         //when and then
-        mockMvc.get("/spaces/$spaceId/users/${UUID.randomUUID()}")
+        mockMvc.get("/spaces/$spaceId/users/${UUID.randomUUID()}/raw")
             .andExpect {
                 status { isNotFound() }
             }
