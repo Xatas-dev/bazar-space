@@ -139,7 +139,7 @@ class SpaceControllerTest: BaseWebTest() {
         val requestedUser = initDataHelper.createUser(spaceId, UUID.randomUUID(), true)
 
         //when
-        val actualResponse = mockMvc.get("/spaces/$spaceId/users/${requestedUser.userId}/raw")
+        val actualResponse = mockMvc.get("/v1/spaces/$spaceId/users/${requestedUser.userId}/raw")
             .andExpect {
                 status { isOk() }
             }.andReturn().response.contentAsString
@@ -164,7 +164,7 @@ class SpaceControllerTest: BaseWebTest() {
         initDataHelper.createUser(spaceId, authenticatedUserId, creator = true)
 
         //when
-        val actualResponse = mockMvc.get("/spaces/$spaceId/users/$authenticatedUserId/raw")
+        val actualResponse = mockMvc.get("/v1/spaces/$spaceId/users/$authenticatedUserId/raw")
             .andExpect {
                 status { isOk() }
             }.andReturn().response.contentAsString
@@ -188,7 +188,7 @@ class SpaceControllerTest: BaseWebTest() {
         initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
 
         //when and then
-        mockMvc.get("/spaces/$spaceId/users/${UUID.randomUUID()}/raw")
+        mockMvc.get("/v1/spaces/$spaceId/users/${UUID.randomUUID()}/raw")
             .andExpect {
                 status { isNotFound() }
             }
