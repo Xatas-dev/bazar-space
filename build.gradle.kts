@@ -11,7 +11,7 @@ plugins {
 val springGrpcVersion by extra("1.0.0")
 
 group = "org.bazar"
-version = "1.0.3"
+version = "1.0.4"
 description = "bazar-space"
 
 java {
