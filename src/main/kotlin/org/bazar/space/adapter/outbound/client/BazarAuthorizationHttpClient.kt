@@ -23,25 +23,26 @@ class BazarAuthorizationHttpClient(
     override fun getRoleNames(spaceId: Long, userIds: List<UUID>): Map<UUID, GetRoleNameDto> {
         logger.debug { "Fetching role names from bazar-authorization: ${userIds.size} users" }
 
-        val cacheKeys = userIds.map { RoleNameCacheKey(spaceId, it) }
-        val cacheHit: Map<UUID, GetRoleNameDto> = getRoleNamesFromCache(cacheKeys)
-        val cacheMiss: List<UUID> = userIds.filter { !cacheHit.contains(it) }
-
-        if (cacheMiss.isEmpty()) {
-            return cacheHit
-        }
+        //TODO: Return when authorization will send kafka events
+//        val cacheKeys = userIds.map { RoleNameCacheKey(spaceId, it) }
+//        val cacheHit: Map<UUID, GetRoleNameDto> = getRoleNamesFromCache(cacheKeys)
+//        val cacheMiss: List<UUID> = userIds.filter { !cacheHit.contains(it) }
+//
+//        if (cacheMiss.isEmpty()) {
+//            return cacheHit
+//        }
 
         val response = try {
-            bazarAuthorizationFeignClient.getRoleNames(spaceId, cacheMiss)
+            bazarAuthorizationFeignClient.getRoleNames(spaceId, userIds)
         } catch (ex: FeignException) {
             logger.error(ex) { "Error during bazar-authorization api call, can't enrich original response with role name" }
             GetRoleNamesResponse(emptyList())
         }
 
         val usersResponse = response.roles.associateBy { it.userId.toUuid() }
-        putInCache(usersResponse.mapKeys { RoleNameCacheKey(spaceId, it.key).toString() })
+//        putInCache(usersResponse.mapKeys { RoleNameCacheKey(spaceId, it.key).toString() })
 
-        return cacheHit + usersResponse
+        return usersResponse
     }
 
     private fun getRoleNamesFromCache(keys: List<RoleNameCacheKey>): Map<UUID, GetRoleNameDto> {
