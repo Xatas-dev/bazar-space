@@ -12,6 +12,7 @@ import org.bazar.space.adapter.outbound.client.BazarAuthorizationFeignClient
 import org.bazar.space.adapter.outbound.client.BazarPersonaFeignClient
 import org.bazar.space.model.UserInSpaceRawDto
 import org.bazar.space.utils.InitDataHelper
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.mockito.Mockito.`when` as whenever
 import org.junit.jupiter.api.Test
@@ -40,79 +41,76 @@ class SpaceControllerTest: BaseWebTest() {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
-    //TODO: Turn on when authorization will send kafka events
-//    @Test
-//    @DisplayName("Trigger GET /spaces/{spaceId}/users twice, should return expected response and call external API only once")
-//    fun getAllUsersEnriched_shouldReturnOk() {
-//        //given
-//        val spaceId = initDataHelper.createSpace()
-//        val randomUsers = List(5) {
-//            initDataHelper.createUser(spaceId)
-//        }
-//        val authenticatedUser = initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
-//        val users = randomUsers + authenticatedUser
-//
-//        val mockPersonaResponse = List(6) { index ->
-//            UserPersonaDto(
-//                users[index].userId,
-//                "test$index",
-//                "email$index",
-//                "TestFirstName$index",
-//                "TestLastName$index"
-//            )
-//        }
-//
-//        val mockAuthorizationResponse = GetRoleNamesResponse(
-//            List(6) { index ->
-//                GetRoleNameDto(
-//                    index.toLong(),
-//                    "CustomRole$index",
-//                    users[index].userId.toString(),
-//                    true
-//                )
-//            }
-//        )
-//
-//        whenever(bazarPersonaFeignClient.getUsersByIds(anyList())).thenReturn(mockPersonaResponse)
-//        whenever(bazarAuthorizationFeignClient.getRoleNames(anyLong(), anyList())).thenReturn(mockAuthorizationResponse)
-//
-//        //when
-//        mockMvc.get("/spaces/$spaceId/users")
-//
-//        val actualResponse = mockMvc.get("/spaces/$spaceId/users")
-//            .andExpect {
-//                status { isOk() }
-//            }.andReturn().response.contentAsString
-//        val actualResponseDto = objectMapper.readValue(actualResponse, GetUsersInSpaceResponse::class.java)
-//
-//        //then
-//
-//        assertThat(actualResponseDto).isNotNull
-//
-//        assertThat(actualResponseDto.users)
-//            .isNotNull
-//            .hasSize(6)
-//            .containsExactlyInAnyOrderElementsOf(
-//                users.mapIndexed { index, user ->
-//                    UserInSpaceDto(
-//                        user.userId,
-//                        spaceId,
-//                        mockPersonaResponse[index].userName,
-//                        mockPersonaResponse[index].firstName,
-//                        mockPersonaResponse[index].lastName,
-//                        user.creator,
-//                        SimpleRoleDto(
-//                            mockAuthorizationResponse.roles[index].id,
-//                            mockAuthorizationResponse.roles[index].name,
-//                            mockAuthorizationResponse.roles[index].isVisible
-//                        )
-//
-//                    )
-//                }
-//            )
-//        verify(bazarAuthorizationFeignClient, times(1)).getRoleNames(anyLong(), anyList())
-//        verify(bazarPersonaFeignClient, times(1)).getUsersByIds(anyList())
-//    }
+    @Disabled("Turn on when authorization will send kafka events")
+    @Test
+    @DisplayName("Trigger GET /spaces/{spaceId}/users twice, should return expected response and call external API only once")
+    fun getAllUsersEnriched_shouldReturnOk() {
+        //given
+        val spaceId = initDataHelper.createSpace()
+        val randomUsers = List(5) {
+            initDataHelper.createUser(spaceId)
+        }
+        val authenticatedUser = initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
+        val users = randomUsers + authenticatedUser
+
+        val mockPersonaResponse = List(6) { index ->
+            UserPersonaDto(
+                users[index].userId,
+                "test$index",
+                "test$index"
+            )
+        }
+
+        val mockAuthorizationResponse = GetRoleNamesResponse(
+            List(6) { index ->
+                GetRoleNameDto(
+                    index.toLong(),
+                    "CustomRole$index",
+                    users[index].userId.toString(),
+                    true
+                )
+            }
+        )
+
+        whenever(bazarPersonaFeignClient.getUsersByIds(anyList())).thenReturn(mockPersonaResponse)
+        whenever(bazarAuthorizationFeignClient.getRoleNames(anyLong(), anyList())).thenReturn(mockAuthorizationResponse)
+
+        //when
+        mockMvc.get("/spaces/$spaceId/users")
+
+        val actualResponse = mockMvc.get("/spaces/$spaceId/users")
+            .andExpect {
+                status { isOk() }
+            }.andReturn().response.contentAsString
+        val actualResponseDto = objectMapper.readValue(actualResponse, GetUsersInSpaceResponse::class.java)
+
+        //then
+
+        assertThat(actualResponseDto).isNotNull
+
+        assertThat(actualResponseDto.users)
+            .isNotNull
+            .hasSize(6)
+            .containsExactlyInAnyOrderElementsOf(
+                users.mapIndexed { index, user ->
+                    UserInSpaceDto(
+                        user.userId,
+                        spaceId,
+                        mockPersonaResponse[index].username,
+                        mockPersonaResponse[index].displayName,
+                        user.creator,
+                        SimpleRoleDto(
+                            mockAuthorizationResponse.roles[index].id,
+                            mockAuthorizationResponse.roles[index].name,
+                            mockAuthorizationResponse.roles[index].isVisible
+                        )
+
+                    )
+                }
+            )
+        verify(bazarAuthorizationFeignClient, times(1)).getRoleNames(anyLong(), anyList())
+        verify(bazarPersonaFeignClient, times(1)).getUsersByIds(anyList())
+    }
 
     @Test
     @DisplayName("Trigger GET /spaces/{spaceId}/users, should return 403 due to lack of permission")

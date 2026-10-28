@@ -12,7 +12,7 @@ import java.util.*
 )
 interface BazarPersonaFeignClient {
 
-    @GetMapping("/users")
+    @GetMapping("/v2/users")
     fun getUsersByIds(@RequestParam("ids") ids: Collection<UUID>): List<UserPersonaDto>
 }
 
