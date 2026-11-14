@@ -33,6 +33,7 @@ class GetUsersInSpaceUseCaseImpl(
                 spaceId = query.spaceId,
                 username = persona?.username ?: "",
                 displayName = persona?.displayName ?: "",
+                avatarUrl = persona?.avatarUrl,
                 creator = member.creator,
                 role = role?.let { RoleInfo(it.id, it.name, it.isVisible) }
             )

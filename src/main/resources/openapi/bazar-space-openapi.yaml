@@ -233,6 +233,10 @@ components:
         displayName:
           type: string
           description: firstName from bazar-persona/users
+        avatarUrl:
+          type: string
+          format: uri
+          description: avatarUrl from bazar-persona/users
         creator:
           type: boolean
           description: Is user creator of the space

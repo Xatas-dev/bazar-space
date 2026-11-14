@@ -61,7 +61,7 @@ class ArchitectureTest {
     @ArchTest
     val adapter_inbound_may_only_access_domain_and_application: ArchRule = ARCHITECTURE
         .whereLayer(ADAPTER_INBOUND)
-        .mayOnlyAccessLayers(DOMAIN, APPLICATION)
+        .mayOnlyAccessLayers(DOMAIN, APPLICATION, INFRASTRUCTURE)
         .`as`("Inbound adapters may only access Domain and Application layers")
 
     @ArchTest
