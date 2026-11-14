@@ -17,9 +17,8 @@ fun List<Space>.toGetSpacesResponse() = GetSpacesResponse(map { it.toGetSpaceDto
 fun UserInSpace.toUserInSpaceDto() = UserInSpaceDto(
     userId = userId,
     spaceId = spaceId,
-    userName = userName,
-    firstName = firstName,
-    lastName = lastName,
+    username = username,
+    displayName = displayName,
     creator = creator,
     role = role?.let { SimpleRoleDto(it.id, it.name, it.isVisible) }
 )

@@ -215,9 +215,8 @@ components:
       required:
         - userId
         - spaceId
-        - userName
-        - firstName
-        - lastName
+        - username
+        - displayName
         - creator
       properties:
         userId:
@@ -228,15 +227,12 @@ components:
           type: integer
           format: int64
           description: Space ID
-        userName:
+        username:
           type: string
           description: userName from bazar-persona/users
-        firstName:
+        displayName:
           type: string
           description: firstName from bazar-persona/users
-        lastName:
-          type: string
-          description: lastName from bazar-persona/users
         creator:
           type: boolean
           description: Is user creator of the space

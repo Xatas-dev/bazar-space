@@ -146,3 +146,7 @@ tasks.withType<Test> {
 tasks.withType<KotlinCompile> {
     dependsOn("openApiGenerate")
 }
+
+tasks.jar {
+    enabled = false
+}

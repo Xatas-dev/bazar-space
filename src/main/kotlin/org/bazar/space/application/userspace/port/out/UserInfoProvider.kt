@@ -8,9 +8,6 @@ fun interface UserInfoProvider {
 
 data class UserPersonaDto(
     val id: UUID,
-    val userName: String,
-    val email: String,
-    val firstName: String,
-    val lastName: String,
-    val userPic: String? = null
+    val username: String,
+    val displayName: String,
 )
