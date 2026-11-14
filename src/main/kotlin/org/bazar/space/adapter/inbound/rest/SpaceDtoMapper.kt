@@ -3,6 +3,7 @@ package org.bazar.space.adapter.inbound.rest
 import org.bazar.space.domain.space.Space
 import org.bazar.space.application.userspace.UserInSpace
 import org.bazar.space.application.userspace.UserInSpaceRaw
+import org.bazar.space.infrastructure.util.extension.toUri
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.model.GetUsersInSpaceResponse
@@ -19,6 +20,7 @@ fun UserInSpace.toUserInSpaceDto() = UserInSpaceDto(
     spaceId = spaceId,
     username = username,
     displayName = displayName,
+    avatarUrl = avatarUrl?.toUri(),
     creator = creator,
     role = role?.let { SimpleRoleDto(it.id, it.name, it.isVisible) }
 )

@@ -7,6 +7,7 @@ data class UserInSpace(
     val spaceId: Long,
     val username: String,
     val displayName: String,
+    val avatarUrl: String?,
     val creator: Boolean,
     val role: RoleInfo?
 )

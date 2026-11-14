@@ -20,24 +20,24 @@ class BazarPersonaHttpClient(
 
     override fun getUsersByIds(userIds: List<UUID>): Map<UUID, UserPersonaDto> {
         logger.debug { "Fetching multiple users from bazar-persona: ${userIds.size} users" }
-
-        val usersInCache = getUsersFromCache(userIds)
-        val cacheMissedUserIds = userIds.filter { !usersInCache.contains(it) }
-
-        if (cacheMissedUserIds.isEmpty()) {
-            return usersInCache
-        }
+        //TODO: https://grinbog015.atlassian.net/browse/BZR-246
+//        val usersInCache = getUsersFromCache(userIds)
+//        val cacheMissedUserIds = userIds.filter { !usersInCache.contains(it) }
+//
+//        if (cacheMissedUserIds.isEmpty()) {
+//            return usersInCache
+//        }
 
         val response = try {
-            bazarPersonaFeignClient.getUsersByIds(cacheMissedUserIds)
+            bazarPersonaFeignClient.getUsersByIds(userIds)
         } catch (ex: FeignException) {
             logger.error(ex) { "Error during bazar-persona call, can't enrich original response with user info" }
             emptyList()
         }
         val usersResponse = response.associateBy { it.id }
-        putInCache(usersResponse)
+//        putInCache(usersResponse)
 
-        return usersInCache + usersResponse
+        return usersResponse
     }
 
     private fun getUsersFromCache(userIds: List<UUID>): Map<UUID, UserPersonaDto> {
