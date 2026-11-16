@@ -1,6 +1,6 @@
 package org.bazar.space.domain.space
 
-import org.bazar.space.domain.exception.DomainException
+import org.bazar.space.domain.exception.ForbiddenException
 import org.bazar.space.domain.userspace.UserSpace
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -32,14 +32,14 @@ class SpaceMembershipTest {
 
     @Test
     fun `ensureUserIsMember throws when user is not a member`() {
-        assertThrows(DomainException::class.java) {
+        assertThrows(ForbiddenException::class.java) {
             SpaceMembership.ensureUserIsMember(members, outsiderId)
         }
     }
 
     @Test
     fun `ensureUserIsMember throws when space has no members`() {
-        assertThrows(DomainException::class.java) {
+        assertThrows(ForbiddenException::class.java) {
             SpaceMembership.ensureUserIsMember(emptyList(), outsiderId)
         }
     }

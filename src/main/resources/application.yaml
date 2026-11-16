@@ -19,7 +19,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KC_URL:http://localhost:9999}/realms/${KC_REALM:bazar-realm}
+          issuer-uri: ${KC_URL:http://localhost:9999}/realms/bazar-realm}
   threads:
     virtual:
       enabled: true
@@ -28,19 +28,30 @@ spring:
   kafka:
     enabled: true
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: bazar-space
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.value.default.type: org.bazar.space.adapter.inbound.kafka.BazarFilesEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     security:
-      protocol: SASL_PLAINTEXT
+      protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
     topics:
       producers:
         space-events:
           name: space.events
           enabled: true
+      consumers:
+        file-events:
+          name: ${FILE_EVENTS_TOPIC:bazar.files.events}
+          enabled: true
     properties:
-      security.protocol: SASL_SSL
-      sasl.mechanism: SCRAM-SHA-512
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:SCRAM-SHA-512}
       sasl.jaas.config: >
         org.apache.kafka.common.security.scram.ScramLoginModule required
         username="${KAFKA_USERNAME}"
@@ -63,3 +74,6 @@ rest:
   clients:
     bazar-persona-url: ${BAZAR_PERSONA_API_URL:http://localhost:8081/api}
     bazar-authz-url: ${BAZAR_AUTHORIZATION_API_URL:http://localhost:8082/api}
+    bazar-files-url: ${BAZAR_FILES_API_URL:http://localhost:8083/api}
+
+file-domain: bazar-space

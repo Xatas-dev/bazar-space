@@ -39,6 +39,7 @@ val mockitoAgent = configurations.create("mockitoAgent")
 dependencies {
     // Mockito agent fix
     testImplementation("org.mockito:mockito-core:5.20.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
     mockitoAgent("org.mockito:mockito-core:5.20.0") { isTransitive = false }
 
     //kafka

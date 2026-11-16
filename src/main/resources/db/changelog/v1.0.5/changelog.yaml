@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: 20261116-00-0-create-space-avatar-table.sql
+      relativeToChangelogFile: true

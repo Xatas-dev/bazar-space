@@ -1,1 +1,1 @@
-truncate table space, user_space, outbox;
+truncate table space_avatar, space, user_space, outbox;
