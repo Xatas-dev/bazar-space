@@ -7,8 +7,7 @@ import org.bazar.space.application.shared.port.out.Authorizer
 import org.bazar.space.application.shared.port.out.AuthzManager
 import org.bazar.space.application.userspace.port.out.UserSpaceRepositoryPort
 import org.bazar.space.application.shared.buildAuthorizationCheck
-import org.bazar.space.domain.exception.DomainException
-import org.bazar.space.domain.exception.DomainErrors
+import org.bazar.space.domain.exception.UserNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -23,7 +22,7 @@ class DeleteUserFromSpaceUseCaseImpl(
     override fun execute(command: DeleteUserFromSpaceCommand) {
         authorizer.authorizeOrThrow(buildAuthorizationCheck(command.spaceId, Permission.SPACE_USER_DELETE))
         val user = userSpaceRepositoryPort.findBySpaceIdAndUserId(command.spaceId, command.userId)
-            ?: throw DomainException(DomainErrors.USER_NOT_FOUND, command.userId, command.spaceId)
+            ?: throw UserNotFoundException(command.userId, command.spaceId)
         userSpaceRepositoryPort.deleteBySpaceIdAndUserId(command.spaceId, command.userId)
         authzManager.deleteUserInAuthz(command.userId, command.spaceId, user.creator)
     }

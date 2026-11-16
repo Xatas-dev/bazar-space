@@ -1,7 +1,6 @@
 package org.bazar.space.domain.space
 
-import org.bazar.space.domain.exception.DomainException
-import org.bazar.space.domain.exception.DomainErrors
+import org.bazar.space.domain.exception.ForbiddenException
 import org.bazar.space.domain.userspace.UserSpace
 import java.util.UUID
 
@@ -9,7 +8,7 @@ object SpaceMembership {
 
     fun ensureUserIsMember(members: List<UserSpace>, userId: UUID) {
         if (members.none { it.userId == userId }) {
-            throw DomainException(DomainErrors.FORBIDDEN)
+            throw ForbiddenException()
         }
     }
 

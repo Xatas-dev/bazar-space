@@ -11,9 +11,14 @@ import org.bazar.space.model.SimpleRoleDto
 import org.bazar.space.model.UserInSpaceDto
 import org.bazar.space.model.UserInSpaceRawDto
 
-fun Space.toGetSpaceDto() = GetSpaceDto(requireNotNull(id) { "Space id must not be null" }, name)
+fun Space.toGetSpaceDto(avatarUrl: String? = null) = GetSpaceDto(
+    id = requireNotNull(id) { "Space id must not be null" },
+    name = name,
+    avatarUrl = avatarUrl
+)
 
-fun List<Space>.toGetSpacesResponse() = GetSpacesResponse(map { it.toGetSpaceDto() }.toList())
+fun List<Space>.toGetSpacesResponse(avatarUrlsBySpaceId: Map<Long, String?>) =
+    GetSpacesResponse(map { it.toGetSpaceDto(avatarUrlsBySpaceId[it.id]) }.toList())
 
 fun UserInSpace.toUserInSpaceDto() = UserInSpaceDto(
     userId = userId,

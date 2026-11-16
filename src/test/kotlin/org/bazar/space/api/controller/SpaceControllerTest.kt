@@ -1,269 +1,189 @@
 package org.bazar.space.api.controller
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.tuple
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.withPollInterval
 import org.bazar.space.BaseWebTest
-import org.bazar.space.model.GetUsersInSpaceResponse
-import org.bazar.space.model.SimpleRoleDto
-import org.bazar.space.model.UserInSpaceDto
-import org.bazar.space.application.userspace.port.out.GetRoleNameDto
-import org.bazar.space.application.userspace.port.out.UserPersonaDto
-import org.bazar.space.adapter.outbound.client.GetRoleNamesResponse
-import org.bazar.space.adapter.outbound.client.BazarAuthorizationFeignClient
-import org.bazar.space.adapter.outbound.client.BazarPersonaFeignClient
-import org.bazar.space.infrastructure.util.extension.toUri
-import org.bazar.space.model.UserInSpaceRawDto
+import org.bazar.space.infrastructure.config.kafka.KafkaProperties
+import org.bazar.space.infrastructure.config.kafka.KafkaTestConsumer
+import org.bazar.space.adapter.outbound.space.event.SpaceEventDto
+import org.bazar.space.adapter.outbound.space.event.SpaceEventType
+import org.bazar.space.adapter.outbound.shared.outbox.OutboxEntity
+import org.bazar.space.adapter.outbound.space.persistence.SpaceEntity
+import org.bazar.space.adapter.outbound.shared.outbox.OutboxStatus
+import org.bazar.space.adapter.outbound.space.persistence.SpaceEntityRepository
+import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntity
+import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntityRepository
+import org.bazar.space.adapter.outbound.userspace.persistence.UserSpaceEntityRepository
+import org.bazar.space.domain.space.SpaceAvatarStatus
+import org.bazar.space.infrastructure.utils.SpaceCreator
+import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.utils.InitDataHelper
-import org.junit.jupiter.api.Disabled
+import org.bazar.space.utils.repository.JdbcTestHelper
 import org.junit.jupiter.api.DisplayName
-import org.mockito.Mockito.`when` as whenever
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.anyList
-import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.http.MediaType.APPLICATION_JSON
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
+import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 
-class SpaceControllerTest: BaseWebTest() {
-
-    @MockitoBean
-    private lateinit var bazarPersonaFeignClient: BazarPersonaFeignClient
-
-    @MockitoBean
-    private lateinit var bazarAuthorizationFeignClient: BazarAuthorizationFeignClient
+class SpaceControllerTest : BaseWebTest() {
 
     @Autowired
-    private lateinit var initDataHelper: InitDataHelper
+    lateinit var spaceRepository: SpaceEntityRepository
 
     @Autowired
-    private lateinit var objectMapper: ObjectMapper
+    lateinit var spaceAvatarEntityRepository: SpaceAvatarEntityRepository
 
-    @Disabled("Turn on when authorization will send kafka events")
+    @Autowired
+    lateinit var userRepository: UserSpaceEntityRepository
+
+    @Autowired
+    lateinit var jdbcTestHelper: JdbcTestHelper
+
+    @Autowired
+    lateinit var spaceCreator: SpaceCreator
+
+    @Autowired
+    lateinit var kafkaProperties: KafkaProperties
+
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
+
+    @Autowired
+    lateinit var initDataHelper: InitDataHelper
+
+    private val authenticatedUserId = UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7")
+
     @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users twice, should return expected response and call external API only once")
-    fun getAllUsersEnrichedTwice_shouldReturnOkAndHitCache() {
-        //given
-        val spaceId = initDataHelper.createSpace()
-        val randomUsers = List(5) {
-            initDataHelper.createUser(spaceId)
-        }
-        val authenticatedUser = initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
-        val users = randomUsers + authenticatedUser
-
-        val mockPersonaResponse = List(6) { index ->
-            UserPersonaDto(
-                users[index].userId,
-                "test$index",
-                "test$index",
-                "https://test.s3/$index"
-            )
-        }
-
-        val mockAuthorizationResponse = GetRoleNamesResponse(
-            List(6) { index ->
-                GetRoleNameDto(
-                    index.toLong(),
-                    "CustomRole$index",
-                    users[index].userId.toString(),
-                    true
-                )
-            }
-        )
-
-        whenever(bazarPersonaFeignClient.getUsersByIds(anyList())).thenReturn(mockPersonaResponse)
-        whenever(bazarAuthorizationFeignClient.getRoleNames(anyLong(), anyList())).thenReturn(mockAuthorizationResponse)
-
+    @DisplayName("Create space with name, make sure it persist, response is 200")
+    fun createSpaceWithName_ShouldReturnNewSpace() {
+        val spaceName = "DOTA2"
         //when
-        mockMvc.get("/spaces/$spaceId/users")
-
-        val actualResponse = mockMvc.get("/spaces/$spaceId/users")
-            .andExpect {
-                status { isOk() }
-            }.andReturn().response.contentAsString
-        val actualResponseDto = objectMapper.readValue(actualResponse, GetUsersInSpaceResponse::class.java)
-
-        //then
-
-        assertThat(actualResponseDto).isNotNull
-
-        assertThat(actualResponseDto.users)
-            .isNotNull
-            .hasSize(6)
-            .containsExactlyInAnyOrderElementsOf(
-                users.mapIndexed { index, user ->
-                    UserInSpaceDto(
-                        user.userId,
-                        spaceId,
-                        mockPersonaResponse[index].username,
-                        mockPersonaResponse[index].displayName,
-                        user.creator,
-                        mockPersonaResponse[index].avatarUrl.toUri(),
-                        SimpleRoleDto(
-                            mockAuthorizationResponse.roles[index].id,
-                            mockAuthorizationResponse.roles[index].name,
-                            mockAuthorizationResponse.roles[index].isVisible
-                        )
-
-                    )
-                }
-            )
-        verify(bazarAuthorizationFeignClient, times(1)).getRoleNames(anyLong(), anyList())
-        verify(bazarPersonaFeignClient, times(1)).getUsersByIds(anyList())
+        mockMvc.post("/space") {
+            accept = APPLICATION_JSON
+            param("name", spaceName)
+        }.andExpect {
+            status { is2xxSuccessful() }
+            jsonPath("$.name") { value(spaceName) }
+        }
+        val spaces = spaceRepository.findAll()
+        val users = userRepository.findAll()
+        assertThat(spaces)
+            .hasSize(1)
+            .extracting(SpaceEntity::name)
+            .containsExactlyInAnyOrder(tuple(spaceName))
+        assertThat(users)
+            .hasSize(1)
+        val user = users.first()
+        assertThat(user.creator).isTrue
     }
 
     @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users , should return OK")
-    fun getAllUsersEnriched_shouldReturnOk() {
-        //given
-        val spaceId = initDataHelper.createSpace()
-        val randomUsers = List(5) {
-            initDataHelper.createUser(spaceId)
-        }
-        val authenticatedUser = initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
-        val users = randomUsers + authenticatedUser
-
-        val mockPersonaResponse = List(6) { index ->
-            UserPersonaDto(
-                users[index].userId,
-                "test$index",
-                "test$index",
-                "https://test.s3/$index"
-            )
-        }
-
-        val mockAuthorizationResponse = GetRoleNamesResponse(
-            List(6) { index ->
-                GetRoleNameDto(
-                    index.toLong(),
-                    "CustomRole$index",
-                    users[index].userId.toString(),
-                    true
-                )
-            }
-        )
-
-        whenever(bazarPersonaFeignClient.getUsersByIds(anyList())).thenReturn(mockPersonaResponse)
-        whenever(bazarAuthorizationFeignClient.getRoleNames(anyLong(), anyList())).thenReturn(mockAuthorizationResponse)
-
+    @DisplayName("Patch space name, should update and return 200")
+    fun patchSpaceName_ShouldReturnOk() {
+        val newName = "DOTA2"
+        val spaceInDb = spaceCreator.create()
         //when
-        val actualResponse = mockMvc.get("/spaces/$spaceId/users")
-            .andExpect {
-                status { isOk() }
-            }.andReturn().response.contentAsString
-        val actualResponseDto = objectMapper.readValue(actualResponse, GetUsersInSpaceResponse::class.java)
-
-        //then
-
-        assertThat(actualResponseDto).isNotNull
-
-        assertThat(actualResponseDto.users)
-            .isNotNull
-            .hasSize(6)
-            .containsExactlyInAnyOrderElementsOf(
-                users.mapIndexed { index, user ->
-                    UserInSpaceDto(
-                        user.userId,
-                        spaceId,
-                        mockPersonaResponse[index].username,
-                        mockPersonaResponse[index].displayName,
-                        user.creator,
-                        mockPersonaResponse[index].avatarUrl.toUri(),
-                        SimpleRoleDto(
-                            mockAuthorizationResponse.roles[index].id,
-                            mockAuthorizationResponse.roles[index].name,
-                            mockAuthorizationResponse.roles[index].isVisible
-                        )
-
-                    )
-                }
-            )
-        verify(bazarAuthorizationFeignClient, times(1)).getRoleNames(anyLong(), anyList())
-        verify(bazarPersonaFeignClient, times(1)).getUsersByIds(anyList())
-    }
-
-    @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users, should return 403 due to lack of permission")
-    fun getAllUsersEnriched_shouldReturn403() {
-        //given
-        val spaceId = initDataHelper.createSpace()
-        repeat(5) {
-            initDataHelper.createUser(spaceId)
+        mockMvc.patch("/space/${spaceInDb.id}") {
+            accept = APPLICATION_JSON
+            param("name", newName)
+        }.andExpect {
+            status { is2xxSuccessful() }
+            jsonPath("$.name") { value(newName) }
+            jsonPath("$.id") { value(spaceInDb.id!!) }
         }
-
-        //when and then
-        mockMvc.get("/spaces/$spaceId/users")
-            .andExpect {
-                status { isForbidden() }
-            }
-
-    }
-
-    @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw, should return enriched user and call external API only once")
-    fun getUserInSpace_shouldReturnOk() {
-        //given
-        val spaceId = initDataHelper.createSpace()
-        initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
-        val requestedUser = initDataHelper.createUser(spaceId, UUID.randomUUID(), true)
-
-        //when
-        val actualResponse = mockMvc.get("/v1/spaces/$spaceId/users/${requestedUser.userId}/raw")
-            .andExpect {
-                status { isOk() }
-            }.andReturn().response.contentAsString
-        val actualResponseDto = objectMapper.readValue(actualResponse, UserInSpaceRawDto::class.java)
-
         //then
-        assertThat(actualResponseDto).isEqualTo(
-            UserInSpaceRawDto(
-                requestedUser.userId,
-                spaceId,
-                requestedUser.creator
-            )
-        )
+        val spaces = spaceRepository.findAll()
+        assertThat(spaces)
+            .hasSize(1)
+            .extracting(SpaceEntity::name)
+            .containsExactlyInAnyOrder(tuple(newName))
+
     }
 
     @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw for authenticated user himself, should return enriched user")
-    fun getUserInSpace_shouldReturnOk_whenAuthenticatedUserRequestsHimself() {
-        //given
+    @DisplayName("GET /space should return space info with active avatar url")
+    fun getAllSpaces_shouldReturnAvatarUrl() {
         val spaceId = initDataHelper.createSpace()
-        val authenticatedUserId = UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7")
         initDataHelper.createUser(spaceId, authenticatedUserId, creator = true)
-
-        //when
-        val actualResponse = mockMvc.get("/v1/spaces/$spaceId/users/$authenticatedUserId/raw")
-            .andExpect {
-                status { isOk() }
-            }.andReturn().response.contentAsString
-        val actualResponseDto = objectMapper.readValue(actualResponse, UserInSpaceRawDto::class.java)
-
-        //then
-        assertThat(actualResponseDto).isEqualTo(
-            UserInSpaceRawDto(
-                authenticatedUserId,
-                spaceId,
-                true
+        val avatarUrl = "https://s3.bazar/space-avatar"
+        spaceAvatarEntityRepository.save(
+            SpaceAvatarEntity(
+                spaceId = spaceId,
+                fileId = UUID.randomUUID(),
+                isActive = true,
+                status = SpaceAvatarStatus.SUCCESS.name,
+                url = avatarUrl,
+                errorReason = null,
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         )
+
+        val actualResponse = mockMvc.get("/space") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { is2xxSuccessful() }
+        }.andReturn().response.contentAsString
+
+        val dto = objectMapper.readValue(actualResponse, GetSpacesResponse::class.java)
+
+        assertThat(dto.spaces).hasSize(1)
+        assertThat(dto.spaces!!.first().avatarUrl).isEqualTo(avatarUrl)
     }
 
     @Test
-    @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw, should return 404 when user is not member of the space")
-    fun getUserInSpace_shouldReturn404() {
+    @DisplayName($$"DELETE /space/${spaceId}, should delete and return OK")
+    fun deleteSpace_ShouldDelete() {
         //given
-        val spaceId = initDataHelper.createSpace()
-        initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
+        val spaceInDb = spaceCreator.create()
+        val testConsumer = KafkaTestConsumer(kafkaProperties.producers["space-events"]!!.name, SpaceEventDto::class.java)
+        //when
+        mockMvc.delete("/space/${spaceInDb.id}") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { is2xxSuccessful() }
+        }
+        //then
+        val spaces = spaceRepository.findAll()
+        assertThat(spaces)
+            .hasSize(0)
 
-        //when and then
-        mockMvc.get("/v1/spaces/$spaceId/users/${UUID.randomUUID()}/raw")
-            .andExpect {
-                status { isNotFound() }
+        await atMost Duration.ofSeconds(30) withPollInterval Duration.ofSeconds(3) untilAsserted {
+            testConsumer.poll().first {
+                it.key() == spaceInDb.id.toString()
+            }.apply {
+                assertThat(this.value())
+                    .usingRecursiveAssertion()
+                    .isEqualTo(SpaceEventDto(type = SpaceEventType.DELETE, spaceId = spaceInDb.id!!))
             }
+        }
+
+        val outboxes = jdbcTestHelper.findAll<OutboxEntity>("outbox")
+        assertThat(outboxes)
+            .hasSize(1)
+
+        outboxes.first().apply {
+            assertEquals(entityId, spaceInDb.id)
+            assertEquals(status, OutboxStatus.DONE)
+            assertTrue {
+                updatedAt.isAfter(createdAt)
+            }
+        }
+
     }
 
 }

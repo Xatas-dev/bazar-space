@@ -5,8 +5,7 @@ import org.bazar.authorization.sdk.AuthorizationException as SdkAuthorizationExc
 import org.bazar.authorization.sdk.BazarAuthorizationAdminClient
 import org.bazar.space.application.shared.port.out.AuthzManager
 import org.bazar.space.application.shared.port.out.CurrentUserProvider
-import org.bazar.space.domain.exception.DomainException
-import org.bazar.space.domain.exception.DomainErrors
+import org.bazar.space.domain.exception.ForbiddenException
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.util.*
@@ -24,7 +23,7 @@ class AuthzManagerAdapter(
             bazarAuthzAdminClient.createUser(buildCreateUserRequest(userId, spaceId, creator, currentUser.accessToken))
         } catch (ex: SdkAuthorizationException) {
             logger.error(ex) { "Error during adding new space owner to authz, spaceId = $spaceId" }
-            throw DomainException(DomainErrors.FORBIDDEN)
+            throw ForbiddenException()
         }
     }
 
@@ -33,7 +32,7 @@ class AuthzManagerAdapter(
             bazarAuthzAdminClient.deleteUser(buildDeleteUserRequest(userId, spaceId, isCreator, currentUser.accessToken))
         } catch (ex: SdkAuthorizationException) {
             logger.error(ex) { "Error during deleting user=$userId from space=$spaceId" }
-            throw DomainException(DomainErrors.FORBIDDEN)
+            throw ForbiddenException()
         }
     }
 
@@ -42,7 +41,7 @@ class AuthzManagerAdapter(
             bazarAuthzAdminClient.deleteSpace(buildDeleteSpaceRequest(spaceId, currentUser.accessToken))
         } catch (ex: SdkAuthorizationException) {
             logger.error(ex) { "Error during deleting space $spaceId" }
-            throw DomainException(DomainErrors.FORBIDDEN)
+            throw ForbiddenException()
         }
     }
 }
