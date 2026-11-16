@@ -2,6 +2,7 @@ package org.bazar.space.api.controller
 
 import org.assertj.core.api.Assertions.assertThat
 import org.bazar.space.BaseWebTest
+import org.bazar.space.adapter.inbound.rest.error.ApiErrorResponse
 import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntity
 import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntityRepository
 import org.bazar.space.application.space.port.out.files.FileStoragePort
@@ -120,5 +121,62 @@ class SpaceAvatarControllerTest : BaseWebTest() {
 
         assertThat(dto.avatars).isNotNull
         assertThat(dto.avatars).hasSize(0)
+    }
+
+    @Test
+    @DisplayName("Initiate avatar upload rejects file larger than max size")
+    fun initiateAvatarUpload_shouldRejectTooLargeFile() {
+        val space = spaceCreator.create()
+
+        val actualResponse = mockMvc.post("/space/${space.id}/avatar") {
+            accept = APPLICATION_JSON
+            contentType = APPLICATION_JSON
+            content = """{"fileName":"avatar.png","contentType":"image/png","sizeBytes":99999999}"""
+        }.andExpect {
+            status { isBadRequest() }
+        }.andReturn().response.contentAsString
+
+        val error = objectMapper.readValue(actualResponse, ApiErrorResponse::class.java)
+
+        assertThat(error.code).isEqualTo("INVALID_AVATAR_SIZE")
+        assertThat(spaceAvatarEntityRepository.findAll()).isEmpty()
+    }
+
+    @Test
+    @DisplayName("Initiate avatar upload rejects unsupported mime type")
+    fun initiateAvatarUpload_shouldRejectUnsupportedMimeType() {
+        val space = spaceCreator.create()
+
+        val actualResponse = mockMvc.post("/space/${space.id}/avatar") {
+            accept = APPLICATION_JSON
+            contentType = APPLICATION_JSON
+            content = """{"fileName":"avatar.gif","contentType":"image/gif","sizeBytes":1234}"""
+        }.andExpect {
+            status { isBadRequest() }
+        }.andReturn().response.contentAsString
+
+        val error = objectMapper.readValue(actualResponse, ApiErrorResponse::class.java)
+
+        assertThat(error.code).isEqualTo("INVALID_AVATAR_FILE_TYPE")
+        assertThat(spaceAvatarEntityRepository.findAll()).isEmpty()
+    }
+
+    @Test
+    @DisplayName("Initiate avatar upload rejects unsupported file extension")
+    fun initiateAvatarUpload_shouldRejectUnsupportedExtension() {
+        val space = spaceCreator.create()
+
+        val actualResponse = mockMvc.post("/space/${space.id}/avatar") {
+            accept = APPLICATION_JSON
+            contentType = APPLICATION_JSON
+            content = """{"fileName":"avatar.gif","contentType":"image/png","sizeBytes":1234}"""
+        }.andExpect {
+            status { isBadRequest() }
+        }.andReturn().response.contentAsString
+
+        val error = objectMapper.readValue(actualResponse, ApiErrorResponse::class.java)
+
+        assertThat(error.code).isEqualTo("INVALID_AVATAR_FILE_EXTENSION")
+        assertThat(spaceAvatarEntityRepository.findAll()).isEmpty()
     }
 }

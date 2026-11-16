@@ -77,3 +77,15 @@ rest:
     bazar-files-url: ${BAZAR_FILES_API_URL:http://localhost:8083/api}
 
 file-domain: bazar-space
+validation:
+  avatar:
+    allowed_formats:
+      - svg
+      - png
+      - jpg
+      - jpeg
+    max_size_bytes: 5242880
+    allowed_mime_types:
+      - image/svg+xml
+      - image/png
+      - image/jpeg
