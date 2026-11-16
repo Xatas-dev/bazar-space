@@ -1,5 +1,6 @@
 package org.bazar.space.adapter.outbound.client
 
+import org.bazar.space.infrastructure.config.feign.FeignAuthConfig
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -7,7 +8,8 @@ import java.util.*
 
 @FeignClient(
     name = "bazarAuthorizationFeignClient",
-    url = $$"${rest.clients.bazar-authz-url}"
+    url = $$"${rest.clients.bazar-authz-url}",
+    configuration = [FeignAuthConfig::class]
 )
 interface BazarAuthorizationFeignClient {
 
