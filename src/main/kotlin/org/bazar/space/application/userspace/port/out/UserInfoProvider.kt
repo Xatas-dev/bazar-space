@@ -10,5 +10,5 @@ data class UserPersonaDto(
     val id: UUID,
     val username: String,
     val displayName: String,
-    val avatarUrl: String
+    val avatarUrl: String?
 )

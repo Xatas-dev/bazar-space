@@ -101,7 +101,7 @@ class SpaceMemberControllerTest : BaseWebTest() {
                         mockPersonaResponse[index].username,
                         mockPersonaResponse[index].displayName,
                         user.creator,
-                        mockPersonaResponse[index].avatarUrl.toUri(),
+                        mockPersonaResponse[index].avatarUrl!!.toUri(),
                         SimpleRoleDto(
                             mockAuthorizationResponse.roles[index].id,
                             mockAuthorizationResponse.roles[index].name,
@@ -171,7 +171,7 @@ class SpaceMemberControllerTest : BaseWebTest() {
                         mockPersonaResponse[index].username,
                         mockPersonaResponse[index].displayName,
                         user.creator,
-                        mockPersonaResponse[index].avatarUrl.toUri(),
+                        mockPersonaResponse[index].avatarUrl!!.toUri(),
                         SimpleRoleDto(
                             mockAuthorizationResponse.roles[index].id,
                             mockAuthorizationResponse.roles[index].name,
