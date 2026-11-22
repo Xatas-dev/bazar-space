@@ -84,8 +84,10 @@ validation:
       - png
       - jpg
       - jpeg
+      - webp
     max_size_bytes: 5242880
     allowed_mime_types:
       - image/svg+xml
       - image/png
       - image/jpeg
+      - image/webp
