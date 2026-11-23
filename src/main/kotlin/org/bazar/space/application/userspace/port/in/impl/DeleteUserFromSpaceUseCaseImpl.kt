@@ -20,7 +20,7 @@ class DeleteUserFromSpaceUseCaseImpl(
 
     @Transactional
     override fun execute(command: DeleteUserFromSpaceCommand) {
-        authorizer.authorizeOrThrow(buildAuthorizationCheck(command.spaceId, Permission.SPACE_USER_DELETE))
+        authorizer.authorizeOrThrow(buildAuthorizationCheck(command.spaceId, Permission.SPACE_USER_DELETE, command.userId.toString()))
         val user = userSpaceRepositoryPort.findBySpaceIdAndUserId(command.spaceId, command.userId)
             ?: throw UserNotFoundException(command.userId, command.spaceId)
         userSpaceRepositoryPort.deleteBySpaceIdAndUserId(command.spaceId, command.userId)

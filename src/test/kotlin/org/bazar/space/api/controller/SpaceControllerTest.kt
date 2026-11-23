@@ -22,6 +22,7 @@ import org.bazar.space.domain.space.SpaceAvatarStatus
 import org.bazar.space.infrastructure.utils.SpaceCreator
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.utils.InitDataHelper
+import org.bazar.space.utils.SpaceAvatarCreator
 import org.bazar.space.utils.repository.JdbcTestHelper
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -55,6 +56,9 @@ class SpaceControllerTest : BaseWebTest() {
 
     @Autowired
     lateinit var spaceCreator: SpaceCreator
+
+    @Autowired
+    lateinit var spaceAvatarCreator: SpaceAvatarCreator
 
     @Autowired
     lateinit var kafkaProperties: KafkaProperties
@@ -150,6 +154,7 @@ class SpaceControllerTest : BaseWebTest() {
     fun deleteSpace_ShouldDelete() {
         //given
         val spaceInDb = spaceCreator.create()
+        val avatarInDb = spaceAvatarCreator.create(spaceInDb.id!!)
         val testConsumer = KafkaTestConsumer(kafkaProperties.producers["space-events"]!!.name, SpaceEventDto::class.java)
         //when
         mockMvc.delete("/space/${spaceInDb.id}") {
