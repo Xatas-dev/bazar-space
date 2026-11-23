@@ -27,4 +27,8 @@ class SpaceAvatarRepositoryAdapter(
 
     override fun findAllBySpaceId(spaceId: Long): List<SpaceAvatar> =
         spaceAvatarEntityRepository.findBySpaceIdOrderByCreatedAtDesc(spaceId).map { it.toDomain() }
+
+    override fun deleteAllBySpaceId(spaceId: Long) {
+        spaceAvatarEntityRepository.deleteAllBySpaceId(spaceId)
+    }
 }

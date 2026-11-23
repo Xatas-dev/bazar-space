@@ -14,4 +14,6 @@ interface SpaceAvatarEntityRepository : CrudRepository<SpaceAvatarEntity, Long> 
     fun findBySpaceIdInAndIsActive(spaceIds: Collection<Long>, isActive: Boolean): List<SpaceAvatarEntity>
 
     fun findBySpaceIdOrderByCreatedAtDesc(spaceId: Long): List<SpaceAvatarEntity>
+
+    fun deleteAllBySpaceId(spaceId: Long)
 }

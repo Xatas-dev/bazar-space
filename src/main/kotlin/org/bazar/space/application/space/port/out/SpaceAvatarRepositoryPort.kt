@@ -10,4 +10,5 @@ interface SpaceAvatarRepositoryPort {
     fun findActiveBySpaceIds(spaceIds: Collection<Long>): List<SpaceAvatar>
     fun findByFileId(fileId: UUID): SpaceAvatar?
     fun findAllBySpaceId(spaceId: Long): List<SpaceAvatar>
+    fun deleteAllBySpaceId(spaceId: Long)
 }

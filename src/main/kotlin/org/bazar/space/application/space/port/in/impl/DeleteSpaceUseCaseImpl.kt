@@ -10,6 +10,7 @@ import org.bazar.space.application.space.port.out.SpaceRepositoryPort
 import org.bazar.space.application.userspace.port.out.UserSpaceRepositoryPort
 import org.bazar.space.domain.space.SpaceDomainEvent
 import org.bazar.space.application.shared.buildAuthorizationCheck
+import org.bazar.space.application.space.port.out.SpaceAvatarRepositoryPort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -19,13 +20,15 @@ class DeleteSpaceUseCaseImpl(
     private val userSpaceRepositoryPort: UserSpaceRepositoryPort,
     private val authorizer: Authorizer,
     private val authzManager: AuthzManager,
-    private val eventPublisher: EventPublisher
+    private val eventPublisher: EventPublisher,
+    private val spaceAvatarRepositoryPort: SpaceAvatarRepositoryPort
 ) : DeleteSpaceUseCase {
 
     @Transactional
     override fun execute(command: DeleteSpaceCommand) {
         authorizer.authorizeOrThrow(buildAuthorizationCheck(command.spaceId, Permission.SPACE_DELETE))
         userSpaceRepositoryPort.deleteAllBySpaceId(command.spaceId)
+        spaceAvatarRepositoryPort.deleteAllBySpaceId(command.spaceId)
         spaceRepositoryPort.deleteById(command.spaceId)
         eventPublisher.publish(SpaceDomainEvent.Deleted(command.spaceId))
         authzManager.deleteSpaceInAuthz(command.spaceId)
