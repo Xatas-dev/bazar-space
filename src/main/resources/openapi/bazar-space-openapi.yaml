@@ -117,6 +117,29 @@ paths:
           description: FORBIDDEN - no space_users:ADD permission in the space
         "404":
           description: SPACE_NOT_FOUND
+  /v1/spaces/by-code/{code}:
+    get:
+      tags:
+        - space-controller
+      operationId: getSpacePreviewByJoinCode
+      description: Public endpoint, no authentication. Returns only name and avatar of the space the invite code belongs to.
+      security: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/SpacePreviewResponse"
+        "404":
+          description: SPACE_NOT_FOUND - no space with such join code
   /space/{spaceId}:
     delete:
       tags:
@@ -321,6 +344,18 @@ components:
           type: string
           description: Permanent invite link of the space
           example: https://bazar-space.ru/join/3q2-7wEjRZqF1bXo9sYk4A
+
+    SpacePreviewResponse:
+      description: Public space info available by invite link
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        avatarUrl:
+          type: string
+          description: URL of the currently active space avatar
 
     GetSpacesResponse:
       type: object

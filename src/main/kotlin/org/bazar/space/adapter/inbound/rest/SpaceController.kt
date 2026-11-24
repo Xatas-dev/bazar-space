@@ -11,6 +11,7 @@ import org.bazar.space.application.port.`in`.GetSpacesUseCase
 import org.bazar.space.application.port.`in`.UpdateSpaceUseCase
 import org.bazar.space.application.space.port.`in`.GetSpaceAvatarUseCase
 import org.bazar.space.application.space.port.`in`.GetSpaceJoinCodeUseCase
+import org.bazar.space.application.space.port.`in`.GetSpacePreviewByJoinCodeUseCase
 import org.bazar.space.application.space.port.`in`.InitiateSpaceAvatarUploadUseCase
 import org.bazar.space.application.space.port.out.SpaceAvatarRepositoryPort
 import org.bazar.space.application.space.query.GetSpacesQuery
@@ -22,6 +23,7 @@ import org.bazar.space.model.GetSpaceAvatarsResponse
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.model.SpaceJoinLinkResponse
+import org.bazar.space.model.SpacePreviewResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
@@ -36,6 +38,7 @@ class SpaceController(
     private val initiateSpaceAvatarUploadUseCase: InitiateSpaceAvatarUploadUseCase,
     private val getSpaceAvatarUseCase: GetSpaceAvatarUseCase,
     private val getSpaceJoinCodeUseCase: GetSpaceJoinCodeUseCase,
+    private val getSpacePreviewByJoinCodeUseCase: GetSpacePreviewByJoinCodeUseCase,
     private val spaceAvatarRepositoryPort: SpaceAvatarRepositoryPort,
     private val currentUser: CurrentUserProvider,
     private val appProperties: AppConfigurationProperties,
@@ -95,5 +98,12 @@ class SpaceController(
     ): ResponseEntity<SpaceJoinLinkResponse> {
         val joinCode = getSpaceJoinCodeUseCase.execute(spaceId)
         return ResponseEntity.ok(joinCode.toSpaceJoinLinkResponse(appProperties.joinLink.baseJoinUrl))
+    }
+
+    override fun getSpacePreviewByJoinCode(
+        @PathVariable code: String
+    ): ResponseEntity<SpacePreviewResponse> {
+        val preview = getSpacePreviewByJoinCodeUseCase.execute(code)
+        return ResponseEntity.ok(preview.toSpacePreviewResponse())
     }
 }

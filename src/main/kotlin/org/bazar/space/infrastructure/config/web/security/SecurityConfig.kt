@@ -4,9 +4,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
+import org.springframework.security.web.util.matcher.RequestMatcher
 
 
 @Configuration
@@ -25,6 +30,7 @@ class SecurityConfig(
             }
             .authorizeHttpRequests { authz ->
                 authz
+                    .requestMatchers(publicEndpoints).permitAll()
                     .anyRequest().authenticated()
             }
             .sessionManagement { session ->
@@ -32,6 +38,7 @@ class SecurityConfig(
             }
             .oauth2ResourceServer { oauth2 ->
                 oauth2.jwt { }
+                oauth2.bearerTokenResolver(ignoreTokenOn(publicEndpoints))
             }
 
         return http.build()
@@ -72,4 +79,13 @@ class SecurityConfig(
 
         return http.build()
     }
+
+    val publicEndpoints: RequestMatcher =
+        PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/v1/spaces/by-code/*")
+
+    fun ignoreTokenOn(matcher: RequestMatcher): BearerTokenResolver {
+        val delegate = DefaultBearerTokenResolver()
+        return BearerTokenResolver { request -> if (matcher.matches(request)) null else delegate.resolve(request) }
+    }
+
 }
