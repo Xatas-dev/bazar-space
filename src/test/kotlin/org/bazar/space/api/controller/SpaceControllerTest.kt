@@ -32,9 +32,11 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.json.JsonCompareMode
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -247,6 +249,51 @@ class SpaceControllerTest : BaseWebTest() {
             status { isOk() }
             jsonPath("$.spaces[0].id") { value(spaceId) }
             jsonPath("$.spaces[0].joinCode") { doesNotExist() }
+        }
+    }
+
+    @Test
+    @DisplayName("GET /v1/spaces/by-code/{code} should return only name and active avatar url without auth checks")
+    fun getSpacePreviewByJoinCode_shouldReturnNameAndAvatar() {
+        val space = spaceCreator.create(name = "Въебулики")
+        val avatarUrl = "https://cdn.bazar-space.ru/spaces/${space.id}/avatar.png"
+        spaceAvatarCreator.create(space.id!!, url = avatarUrl, isActive = true)
+        spaceAvatarCreator.create(space.id, url = "https://cdn.bazar-space.ru/old.png", isActive = false)
+
+        mockMvc.get("/v1/spaces/by-code/${space.joinCode}") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }
+            content { json("""{"name":"Въебулики","avatarUrl":"$avatarUrl"}""", JsonCompareMode.STRICT) }
+        }
+
+        verifyNoInteractions(authorizer, currentUserProvider)
+    }
+
+    @Test
+    @DisplayName("GET /v1/spaces/by-code/{code} should return null avatar url when space has no active avatar")
+    fun getSpacePreviewByJoinCode_withoutAvatar_shouldReturnNameOnly() {
+        val space = spaceCreator.create(name = "No avatar")
+
+        mockMvc.get("/v1/spaces/by-code/${space.joinCode}") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.name") { value("No avatar") }
+            jsonPath("$.avatarUrl") { doesNotExist() }
+        }
+    }
+
+    @Test
+    @DisplayName("GET /v1/spaces/by-code/{code} should return 404 SPACE_NOT_FOUND for unknown code")
+    fun getSpacePreviewByJoinCode_unknownCode_shouldReturn404() {
+        spaceCreator.create()
+
+        mockMvc.get("/v1/spaces/by-code/unknown-code") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isNotFound() }
+            jsonPath("$.code") { value("SPACE_NOT_FOUND") }
         }
     }
 }

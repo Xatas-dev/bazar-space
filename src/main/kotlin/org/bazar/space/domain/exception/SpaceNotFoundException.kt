@@ -1,4 +1,8 @@
 package org.bazar.space.domain.exception
 
-class SpaceNotFoundException(spaceId: Long)
-    : DomainException("Space $spaceId not found")
+class SpaceNotFoundException : DomainException {
+
+    constructor(spaceId: Long) : super("Space $spaceId not found")
+
+    constructor(joinCode: String) : super("Space by code: $joinCode not found")
+}

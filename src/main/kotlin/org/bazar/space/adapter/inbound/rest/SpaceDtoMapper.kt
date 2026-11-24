@@ -1,5 +1,6 @@
 package org.bazar.space.adapter.inbound.rest
 
+import org.bazar.space.application.space.port.`in`.SpacePreview
 import org.bazar.space.domain.space.Space
 import org.bazar.space.application.userspace.UserInSpace
 import org.bazar.space.application.userspace.UserInSpaceRaw
@@ -8,6 +9,7 @@ import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.model.GetUsersInSpaceResponse
 import org.bazar.space.model.SpaceJoinLinkResponse
+import org.bazar.space.model.SpacePreviewResponse
 import org.bazar.space.model.SimpleRoleDto
 import org.bazar.space.model.UserInSpaceDto
 import org.bazar.space.model.UserInSpaceRawDto
@@ -23,6 +25,11 @@ fun List<Space>.toGetSpacesResponse(avatarUrlsBySpaceId: Map<Long, String?>) =
 
 fun String.toSpaceJoinLinkResponse(baseUrl: String) =
     SpaceJoinLinkResponse(url = "${baseUrl}/$this")
+
+fun SpacePreview.toSpacePreviewResponse() = SpacePreviewResponse(
+    name = name,
+    avatarUrl = avatarUrl
+)
 
 fun UserInSpace.toUserInSpaceDto() = UserInSpaceDto(
     userId = userId,
