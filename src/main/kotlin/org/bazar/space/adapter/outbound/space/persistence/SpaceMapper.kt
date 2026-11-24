@@ -5,6 +5,7 @@ import org.bazar.space.domain.space.Space
 fun SpaceEntity.toDomain(): Space = Space(
     id = id,
     name = name,
+    joinCode = joinCode,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -12,6 +13,7 @@ fun SpaceEntity.toDomain(): Space = Space(
 fun Space.toEntity(): SpaceEntity = SpaceEntity(
     id = id,
     name = name,
+    joinCode = joinCode,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

@@ -1,1 +1,1 @@
-truncate table space_avatar, space, user_space, outbox;
+truncate table join_request, space_avatar, space, user_space, outbox;

@@ -16,4 +16,6 @@ interface SpaceEntityRepository : CrudRepository<SpaceEntity, Long> {
     """
     )
     fun findAllByUserId(userId: UUID): List<SpaceEntity>
+
+    fun findByJoinCode(joinCode: String): SpaceEntity?
 }

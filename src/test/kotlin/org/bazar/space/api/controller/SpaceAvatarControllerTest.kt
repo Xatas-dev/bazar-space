@@ -3,12 +3,12 @@ package org.bazar.space.api.controller
 import org.assertj.core.api.Assertions.assertThat
 import org.bazar.space.BaseWebTest
 import org.bazar.space.adapter.inbound.rest.error.ApiErrorResponse
-import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntity
 import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntityRepository
 import org.bazar.space.application.space.port.out.files.FileStoragePort
 import org.bazar.space.application.space.port.out.files.FileUploadLinkDto
 import org.bazar.space.domain.space.SpaceAvatarStatus
-import org.bazar.space.infrastructure.utils.SpaceCreator
+import org.bazar.space.utils.SpaceAvatarCreator
+import org.bazar.space.utils.SpaceCreator
 import org.bazar.space.model.AvatarUploadTicketDtoResponse
 import org.bazar.space.model.GetSpaceAvatarsResponse
 import org.junit.jupiter.api.DisplayName
@@ -21,13 +21,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
-import java.time.Instant
 import java.util.UUID
 
 class SpaceAvatarControllerTest : BaseWebTest() {
 
     @Autowired
     lateinit var spaceCreator: SpaceCreator
+
+    @Autowired
+    lateinit var spaceAvatarCreator: SpaceAvatarCreator
 
     @Autowired
     lateinit var spaceAvatarEntityRepository: SpaceAvatarEntityRepository
@@ -77,18 +79,7 @@ class SpaceAvatarControllerTest : BaseWebTest() {
         val url = "https://s3.bazar/avatar"
         val fileId = UUID.randomUUID()
 
-        val saved = spaceAvatarEntityRepository.save(
-            SpaceAvatarEntity(
-                spaceId = space.id!!,
-                fileId = fileId,
-                isActive = true,
-                status = SpaceAvatarStatus.SUCCESS.name,
-                url = url,
-                errorReason = null,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
-            )
-        )
+        val saved = spaceAvatarCreator.create(space.id!!, fileId = fileId, url = url)
 
         val actualResponse = mockMvc.get("/space/${space.id}/avatar") {
             accept = APPLICATION_JSON

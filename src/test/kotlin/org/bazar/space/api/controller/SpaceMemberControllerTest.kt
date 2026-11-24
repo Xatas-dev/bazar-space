@@ -12,7 +12,8 @@ import org.bazar.space.adapter.outbound.client.BazarAuthorizationFeignClient
 import org.bazar.space.adapter.outbound.client.BazarPersonaFeignClient
 import org.bazar.space.infrastructure.util.extension.toUri
 import org.bazar.space.model.UserInSpaceRawDto
-import org.bazar.space.utils.InitDataHelper
+import org.bazar.space.utils.SpaceCreator
+import org.bazar.space.utils.UserSpaceCreator
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.mockito.Mockito.`when` as whenever
@@ -37,7 +38,10 @@ class SpaceMemberControllerTest : BaseWebTest() {
     private lateinit var bazarAuthorizationFeignClient: BazarAuthorizationFeignClient
 
     @Autowired
-    private lateinit var initDataHelper: InitDataHelper
+    private lateinit var spaceCreator: SpaceCreator
+
+    @Autowired
+    private lateinit var userSpaceCreator: UserSpaceCreator
 
     @Autowired
     private lateinit var objectMapper: ObjectMapper
@@ -47,11 +51,11 @@ class SpaceMemberControllerTest : BaseWebTest() {
     @DisplayName("Trigger GET /spaces/{spaceId}/users twice, should return expected response and call external API only once")
     fun getAllUsersEnrichedTwice_shouldReturnOkAndHitCache() {
         //given
-        val spaceId = initDataHelper.createSpace()
+        val spaceId = spaceCreator.create().id!!
         val randomUsers = List(5) {
-            initDataHelper.createUser(spaceId)
+            userSpaceCreator.create(spaceId)
         }
-        val authenticatedUser = initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
+        val authenticatedUser = userSpaceCreator.create(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
         val users = randomUsers + authenticatedUser
 
         val mockPersonaResponse = List(6) { index ->
@@ -119,11 +123,11 @@ class SpaceMemberControllerTest : BaseWebTest() {
     @DisplayName("Trigger GET /spaces/{spaceId}/users , should return OK")
     fun getAllUsersEnriched_shouldReturnOk() {
         //given
-        val spaceId = initDataHelper.createSpace()
+        val spaceId = spaceCreator.create().id!!
         val randomUsers = List(5) {
-            initDataHelper.createUser(spaceId)
+            userSpaceCreator.create(spaceId)
         }
-        val authenticatedUser = initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
+        val authenticatedUser = userSpaceCreator.create(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
         val users = randomUsers + authenticatedUser
 
         val mockPersonaResponse = List(6) { index ->
@@ -189,9 +193,9 @@ class SpaceMemberControllerTest : BaseWebTest() {
     @DisplayName("Trigger GET /spaces/{spaceId}/users, should return 403 due to lack of permission")
     fun getAllUsersEnriched_shouldReturn403() {
         //given
-        val spaceId = initDataHelper.createSpace()
+        val spaceId = spaceCreator.create().id!!
         repeat(5) {
-            initDataHelper.createUser(spaceId)
+            userSpaceCreator.create(spaceId)
         }
 
         //when and then
@@ -206,9 +210,9 @@ class SpaceMemberControllerTest : BaseWebTest() {
     @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw, should return enriched user and call external API only once")
     fun getUserInSpace_shouldReturnOk() {
         //given
-        val spaceId = initDataHelper.createSpace()
-        initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
-        val requestedUser = initDataHelper.createUser(spaceId, UUID.randomUUID(), true)
+        val spaceId = spaceCreator.create().id!!
+        userSpaceCreator.create(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
+        val requestedUser = userSpaceCreator.create(spaceId, UUID.randomUUID(), true)
 
         //when
         val actualResponse = mockMvc.get("/v1/spaces/$spaceId/users/${requestedUser.userId}/raw")
@@ -231,9 +235,9 @@ class SpaceMemberControllerTest : BaseWebTest() {
     @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw for authenticated user himself, should return enriched user")
     fun getUserInSpace_shouldReturnOk_whenAuthenticatedUserRequestsHimself() {
         //given
-        val spaceId = initDataHelper.createSpace()
+        val spaceId = spaceCreator.create().id!!
         val authenticatedUserId = UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7")
-        initDataHelper.createUser(spaceId, authenticatedUserId, creator = true)
+        userSpaceCreator.create(spaceId, authenticatedUserId, creator = true)
 
         //when
         val actualResponse = mockMvc.get("/v1/spaces/$spaceId/users/$authenticatedUserId/raw")
@@ -256,8 +260,8 @@ class SpaceMemberControllerTest : BaseWebTest() {
     @DisplayName("Trigger GET /spaces/{spaceId}/users/{userId}/raw, should return 404 when user is not member of the space")
     fun getUserInSpace_shouldReturn404() {
         //given
-        val spaceId = initDataHelper.createSpace()
-        initDataHelper.createUser(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
+        val spaceId = spaceCreator.create().id!!
+        userSpaceCreator.create(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
 
         //when and then
         mockMvc.get("/v1/spaces/$spaceId/users/${UUID.randomUUID()}/raw")

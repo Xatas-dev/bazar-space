@@ -11,6 +11,8 @@ data class SpaceEntity(
 
     var name: String,
 
+    val joinCode: String,
+
     val createdAt: Instant = Instant.now(),
 
     var updatedAt: Instant = Instant.now()

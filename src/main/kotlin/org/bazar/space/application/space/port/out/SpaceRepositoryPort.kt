@@ -11,4 +11,6 @@ interface SpaceRepositoryPort {
     fun deleteById(id: Long)
 
     fun findAllByUserId(userId: UUID): List<Space>
+
+    fun findByJoinCode(joinCode: String): Space?
 }

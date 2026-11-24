@@ -15,7 +15,7 @@ class SpaceAvatarCreator(
         fileId: UUID = UUID.randomUUID(),
         isActive: Boolean = true,
         status: String = "SUCCESS",
-        url: String = "https://s3.test/$fileId",
+        url: String? = "https://s3.test/$fileId",
         errorReason: String? = null,
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = createdAt,
