@@ -140,6 +140,34 @@ paths:
                 $ref: "#/components/schemas/SpacePreviewResponse"
         "404":
           description: SPACE_NOT_FOUND - no space with such join code
+  /v1/spaces/by-code/{code}/join-requests:
+    post:
+      tags:
+        - space-join-request-controller
+      operationId: createJoinRequest
+      description: >
+        Submits a request of the current user to join the space by its invite code.
+        Requires authentication, no permissions. Idempotent - if the request already exists, it is returned.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+      responses:
+        "200":
+          description: Join request created or already exists
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/SpaceJoinRequestResponse"
+        "401":
+          description: Not authenticated
+        "404":
+          description: SPACE_NOT_FOUND - no space with such join code
+        "409":
+          description: USER_ALREADY_IN_SPACE - user is already a member of the space
   /space/{spaceId}:
     delete:
       tags:
@@ -356,6 +384,20 @@ components:
         avatarUrl:
           type: string
           description: URL of the currently active space avatar
+
+    SpaceJoinRequestResponse:
+      type: object
+      required:
+        - id
+        - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+          description: When the request was submitted
 
     GetSpacesResponse:
       type: object
