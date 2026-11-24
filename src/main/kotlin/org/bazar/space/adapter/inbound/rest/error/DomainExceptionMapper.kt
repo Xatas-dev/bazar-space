@@ -8,6 +8,7 @@ import org.bazar.space.domain.exception.InvalidAvatarSizeException
 import org.bazar.space.domain.exception.NotAuthenticatedException
 import org.bazar.space.domain.exception.SpaceAvatarNotFoundException
 import org.bazar.space.domain.exception.SpaceNotFoundException
+import org.bazar.space.domain.exception.UserAlreadyInSpaceException
 import org.bazar.space.domain.exception.UserNotFoundException
 import org.springframework.http.HttpStatus
 
@@ -20,6 +21,9 @@ fun DomainException.toHttpError(): HttpError = when (this) {
 
     is SpaceNotFoundException ->
         httpError(HttpStatus.NOT_FOUND, "SPACE_NOT_FOUND", "Спейс не найден")
+
+    is UserAlreadyInSpaceException ->
+        httpError(HttpStatus.CONFLICT, "USER_ALREADY_IN_SPACE", "Вы уже состоите в этом спейсе")
 
     is UserNotFoundException ->
         httpError(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "Пользователь не найден")
