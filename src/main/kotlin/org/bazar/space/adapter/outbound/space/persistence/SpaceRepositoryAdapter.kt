@@ -21,4 +21,7 @@ class SpaceRepositoryAdapter(
 
     override fun findAllByUserId(userId: UUID): List<Space> =
         spaceEntityRepository.findAllByUserId(userId).map { it.toDomain() }
+
+    override fun findByJoinCode(joinCode: String): Space? =
+        spaceEntityRepository.findByJoinCode(joinCode)?.toDomain()
 }

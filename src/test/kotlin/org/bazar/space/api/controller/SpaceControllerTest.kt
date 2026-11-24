@@ -15,14 +15,12 @@ import org.bazar.space.adapter.outbound.shared.outbox.OutboxEntity
 import org.bazar.space.adapter.outbound.space.persistence.SpaceEntity
 import org.bazar.space.adapter.outbound.shared.outbox.OutboxStatus
 import org.bazar.space.adapter.outbound.space.persistence.SpaceEntityRepository
-import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntity
 import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntityRepository
 import org.bazar.space.adapter.outbound.userspace.persistence.UserSpaceEntityRepository
-import org.bazar.space.domain.space.SpaceAvatarStatus
-import org.bazar.space.infrastructure.utils.SpaceCreator
+import org.bazar.space.utils.SpaceCreator
 import org.bazar.space.model.GetSpacesResponse
-import org.bazar.space.utils.InitDataHelper
 import org.bazar.space.utils.SpaceAvatarCreator
+import org.bazar.space.utils.UserSpaceCreator
 import org.bazar.space.utils.repository.JdbcTestHelper
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -34,7 +32,6 @@ import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
 import java.time.Duration
-import java.time.Instant
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -67,7 +64,7 @@ class SpaceControllerTest : BaseWebTest() {
     lateinit var objectMapper: ObjectMapper
 
     @Autowired
-    lateinit var initDataHelper: InitDataHelper
+    lateinit var userSpaceCreator: UserSpaceCreator
 
     private val authenticatedUserId = UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7")
 
@@ -85,10 +82,10 @@ class SpaceControllerTest : BaseWebTest() {
         }
         val spaces = spaceRepository.findAll()
         val users = userRepository.findAll()
-        assertThat(spaces)
-            .hasSize(1)
-            .extracting(SpaceEntity::name)
-            .containsExactlyInAnyOrder(tuple(spaceName))
+        assertThat(spaces).hasSize(1)
+        val space = spaces.first()
+        assertThat(space.name).isEqualTo(spaceName)
+        assertThat(space.joinCode).isNotNull.isNotBlank.hasSize(22)
         assertThat(users)
             .hasSize(1)
         val user = users.first()
@@ -121,21 +118,10 @@ class SpaceControllerTest : BaseWebTest() {
     @Test
     @DisplayName("GET /space should return space info with active avatar url")
     fun getAllSpaces_shouldReturnAvatarUrl() {
-        val spaceId = initDataHelper.createSpace()
-        initDataHelper.createUser(spaceId, authenticatedUserId, creator = true)
+        val spaceId = spaceCreator.create().id!!
+        userSpaceCreator.create(spaceId, authenticatedUserId, creator = true)
         val avatarUrl = "https://s3.bazar/space-avatar"
-        spaceAvatarEntityRepository.save(
-            SpaceAvatarEntity(
-                spaceId = spaceId,
-                fileId = UUID.randomUUID(),
-                isActive = true,
-                status = SpaceAvatarStatus.SUCCESS.name,
-                url = avatarUrl,
-                errorReason = null,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
-            )
-        )
+        spaceAvatarCreator.create(spaceId, url = avatarUrl)
 
         val actualResponse = mockMvc.get("/space") {
             accept = APPLICATION_JSON

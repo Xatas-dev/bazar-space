@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: 20261124-00-0-create-join-request-table.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 20261124-01-0-add-join-code-column-to-space-table.sql
+      relativeToChangelogFile: true

@@ -6,12 +6,12 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.withPollInterval
 import org.bazar.space.BaseIntegrationTest
-import org.bazar.space.application.space.port.out.SpaceAvatarRepositoryPort
+import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntityRepository
 import org.bazar.space.application.space.port.out.files.FileDownloadLinkDto
 import org.bazar.space.application.space.port.out.files.FileStoragePort
-import org.bazar.space.domain.space.SpaceAvatar
 import org.bazar.space.domain.space.SpaceAvatarStatus
-import org.bazar.space.infrastructure.utils.SpaceCreator
+import org.bazar.space.utils.SpaceAvatarCreator
+import org.bazar.space.utils.SpaceCreator
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.never
@@ -37,7 +37,10 @@ class BazarFilesEventConsumerTest : BaseIntegrationTest() {
     private lateinit var spaceCreator: SpaceCreator
 
     @Autowired
-    private lateinit var spaceAvatarRepositoryPort: SpaceAvatarRepositoryPort
+    private lateinit var spaceAvatarCreator: SpaceAvatarCreator
+
+    @Autowired
+    private lateinit var spaceAvatarEntityRepository: SpaceAvatarEntityRepository
 
     @MockitoBean
     private lateinit var fileStoragePort: FileStoragePort
@@ -46,7 +49,13 @@ class BazarFilesEventConsumerTest : BaseIntegrationTest() {
     private lateinit var filesEventTopic: String
 
     private fun insertPendingAvatar(spaceId: Long, fileId: UUID) {
-        spaceAvatarRepositoryPort.insert(SpaceAvatar.createAvatarForSpace(spaceId, fileId))
+        spaceAvatarCreator.create(
+            spaceId = spaceId,
+            fileId = fileId,
+            isActive = false,
+            status = SpaceAvatarStatus.PENDING.name,
+            url = null,
+        )
     }
 
     private fun uploadedEvent(fileId: UUID) = BazarFilesEvent(
@@ -88,9 +97,9 @@ class BazarFilesEventConsumerTest : BaseIntegrationTest() {
         send(uploadedEvent(fileId))
 
         await atMost Duration.ofSeconds(30) withPollInterval Duration.ofMillis(500) untilAsserted {
-            val avatar = spaceAvatarRepositoryPort.findActiveBySpaceId(space.id)
+            val avatar = spaceAvatarEntityRepository.findBySpaceIdAndIsActive(space.id, true)
             assertThat(avatar).isNotNull
-            assertThat(avatar!!.status).isEqualTo(SpaceAvatarStatus.SUCCESS)
+            assertThat(avatar!!.status).isEqualTo(SpaceAvatarStatus.SUCCESS.name)
             assertThat(avatar.url).isEqualTo(expectedUrl)
             assertThat(avatar.isActive).isTrue()
         }
@@ -109,9 +118,9 @@ class BazarFilesEventConsumerTest : BaseIntegrationTest() {
 
         verify(fileStoragePort, never()).getDownloadLink(any())
 
-        val stored = spaceAvatarRepositoryPort.findByFileId(fileId)
+        val stored = spaceAvatarEntityRepository.findByFileId(fileId)
         assertThat(stored).isNotNull
-        assertThat(stored!!.status).isEqualTo(SpaceAvatarStatus.PENDING)
+        assertThat(stored!!.status).isEqualTo(SpaceAvatarStatus.PENDING.name)
         assertThat(stored.isActive).isFalse()
     }
 
@@ -125,12 +134,12 @@ class BazarFilesEventConsumerTest : BaseIntegrationTest() {
         send(failedEvent(fileId, listOf(FileUploadError("INVALID_EXTENSION", "Not supported file extension"))))
 
         await atMost Duration.ofSeconds(30) withPollInterval Duration.ofMillis(500) untilAsserted {
-            val avatar = spaceAvatarRepositoryPort.findByFileId(fileId)
+            val avatar = spaceAvatarEntityRepository.findByFileId(fileId)
             assertThat(avatar).isNotNull
-            assertThat(avatar!!.status).isEqualTo(SpaceAvatarStatus.ERROR)
+            assertThat(avatar!!.status).isEqualTo(SpaceAvatarStatus.ERROR.name)
         }
 
-        val stored = spaceAvatarRepositoryPort.findByFileId(fileId)!!
+        val stored = spaceAvatarEntityRepository.findByFileId(fileId)!!
         assertThat(stored.isActive).isFalse()
         verify(fileStoragePort, never()).getDownloadLink(any())
     }
