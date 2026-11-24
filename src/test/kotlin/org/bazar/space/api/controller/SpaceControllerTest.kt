@@ -7,32 +7,41 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.withPollInterval
 import org.bazar.space.BaseWebTest
-import org.bazar.space.infrastructure.config.kafka.KafkaProperties
-import org.bazar.space.infrastructure.config.kafka.KafkaTestConsumer
+import org.bazar.space.adapter.outbound.shared.outbox.OutboxEntity
+import org.bazar.space.adapter.outbound.shared.outbox.OutboxStatus
 import org.bazar.space.adapter.outbound.space.event.SpaceEventDto
 import org.bazar.space.adapter.outbound.space.event.SpaceEventType
-import org.bazar.space.adapter.outbound.shared.outbox.OutboxEntity
-import org.bazar.space.adapter.outbound.space.persistence.SpaceEntity
-import org.bazar.space.adapter.outbound.shared.outbox.OutboxStatus
-import org.bazar.space.adapter.outbound.space.persistence.SpaceEntityRepository
 import org.bazar.space.adapter.outbound.space.persistence.SpaceAvatarEntityRepository
+import org.bazar.space.adapter.outbound.space.persistence.SpaceEntity
+import org.bazar.space.adapter.outbound.space.persistence.SpaceEntityRepository
 import org.bazar.space.adapter.outbound.userspace.persistence.UserSpaceEntityRepository
-import org.bazar.space.utils.SpaceCreator
+import org.bazar.space.application.shared.port.out.CurrentUserProvider
+import org.bazar.space.domain.auth.AuthorizationCheck
+import org.bazar.space.domain.auth.Permission
+import org.bazar.space.domain.exception.ForbiddenException
+import org.bazar.space.infrastructure.config.kafka.KafkaProperties
+import org.bazar.space.infrastructure.config.kafka.KafkaTestConsumer
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.utils.SpaceAvatarCreator
+import org.bazar.space.utils.SpaceCreator
 import org.bazar.space.utils.UserSpaceCreator
 import org.bazar.space.utils.repository.JdbcTestHelper
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType.APPLICATION_JSON
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -66,12 +75,14 @@ class SpaceControllerTest : BaseWebTest() {
     @Autowired
     lateinit var userSpaceCreator: UserSpaceCreator
 
-    private val authenticatedUserId = UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7")
+    @MockitoBean
+    lateinit var currentUserProvider: CurrentUserProvider
 
     @Test
     @DisplayName("Create space with name, make sure it persist, response is 200")
     fun createSpaceWithName_ShouldReturnNewSpace() {
         val spaceName = "DOTA2"
+        whenever(currentUserProvider.id).thenReturn(authenticatedUserId)
         //when
         mockMvc.post("/space") {
             accept = APPLICATION_JSON
@@ -122,6 +133,7 @@ class SpaceControllerTest : BaseWebTest() {
         userSpaceCreator.create(spaceId, authenticatedUserId, creator = true)
         val avatarUrl = "https://s3.bazar/space-avatar"
         spaceAvatarCreator.create(spaceId, url = avatarUrl)
+        whenever(currentUserProvider.id).thenReturn(authenticatedUserId)
 
         val actualResponse = mockMvc.get("/space") {
             accept = APPLICATION_JSON
@@ -141,7 +153,8 @@ class SpaceControllerTest : BaseWebTest() {
         //given
         val spaceInDb = spaceCreator.create()
         val avatarInDb = spaceAvatarCreator.create(spaceInDb.id!!)
-        val testConsumer = KafkaTestConsumer(kafkaProperties.producers["space-events"]!!.name, SpaceEventDto::class.java)
+        val testConsumer =
+            KafkaTestConsumer(kafkaProperties.producers["space-events"]!!.name, SpaceEventDto::class.java)
         //when
         mockMvc.delete("/space/${spaceInDb.id}") {
             accept = APPLICATION_JSON
@@ -177,4 +190,63 @@ class SpaceControllerTest : BaseWebTest() {
 
     }
 
+    @Test
+    @DisplayName("GET /v1/spaces/{spaceId}/join-link should return invite link built from base url and join code")
+    fun getSpaceJoinLink_shouldReturnLink() {
+        val space = spaceCreator.create()
+        val user = userSpaceCreator.create(space.id!!, authenticatedUserId)
+
+        whenever(currentUserProvider.id).thenReturn(authenticatedUserId)
+
+        mockMvc.get("/v1/spaces/${space.id}/join-link") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.url") { value("https://bazar-space.ru/join/${space.joinCode}") }
+        }
+
+        verify(authorizer).authorizeOrThrow(AuthorizationCheck(space.id, Permission.SPACE_USER_ADD))
+    }
+
+    @Test
+    @DisplayName("GET /v1/spaces/{spaceId}/join-link should return 403 when user has no space_users:ADD permission")
+    fun getSpaceJoinLink_shouldReturn403() {
+        val space = spaceCreator.create()
+        doThrow(ForbiddenException()).whenever(authorizer).authorizeOrThrow(any())
+
+        mockMvc.get("/v1/spaces/${space.id}/join-link") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isForbidden() }
+            jsonPath("$.code") { value("FORBIDDEN") }
+            jsonPath("$.url") { doesNotExist() }
+        }
+    }
+
+    @Test
+    @DisplayName("GET /v1/spaces/{spaceId}/join-link should return 404 SPACE_NOT_FOUND when space does not exist")
+    fun getSpaceJoinLink_shouldReturn404() {
+        mockMvc.get("/v1/spaces/${Long.MAX_VALUE}/join-link") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isNotFound() }
+            jsonPath("$.code") { value("SPACE_NOT_FOUND") }
+        }
+    }
+
+    @Test
+    @DisplayName("GET /space should not expose join code")
+    fun getAllSpaces_shouldNotExposeJoinCode() {
+        val spaceId = spaceCreator.create().id!!
+        userSpaceCreator.create(spaceId, authenticatedUserId, creator = true)
+        whenever(currentUserProvider.id).thenReturn(authenticatedUserId)
+
+        mockMvc.get("/space") {
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.spaces[0].id") { value(spaceId) }
+            jsonPath("$.spaces[0].joinCode") { doesNotExist() }
+        }
+    }
 }

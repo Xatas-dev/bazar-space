@@ -1,7 +1,25 @@
+authorization:
+  port: 9090
+  host: localhost
+rest:
+  clients:
+    bazar-persona-url: http://localhost:8081/api
+    bazar-authz-url: http://localhost:8082/api
+    bazar-files-url: http://localhost:8083/api
+
+
+app:
+  join-link:
+    base-join-url: https://bazar-space.ru/join
 spring:
-  liquibase:
-    change-log: db/changelog/changelog-master.yaml
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: localhost:8090
   kafka:
     security:
       protocol: PLAINTEXT
-
+      consumers:
+        file-events:
+          name: bazar.files.events

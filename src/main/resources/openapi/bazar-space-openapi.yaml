@@ -91,6 +91,32 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/UserInSpaceRawDto"
+  /v1/spaces/{spaceId}/join-link:
+    get:
+      tags:
+        - space-controller
+      operationId: getSpaceJoinLink
+      description: Returns the permanent invite link of the space. Requires space_users:ADD permission in the space.
+      parameters:
+        - name: spaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/SpaceJoinLinkResponse"
+        "401":
+          description: Not authenticated
+        "403":
+          description: FORBIDDEN - no space_users:ADD permission in the space
+        "404":
+          description: SPACE_NOT_FOUND
   /space/{spaceId}:
     delete:
       tags:
@@ -285,6 +311,16 @@ components:
         avatarUrl:
           type: string
           description: URL of the currently active space avatar
+
+    SpaceJoinLinkResponse:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: Permanent invite link of the space
+          example: https://bazar-space.ru/join/3q2-7wEjRZqF1bXo9sYk4A
 
     GetSpacesResponse:
       type: object

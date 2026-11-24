@@ -1,6 +1,8 @@
 app:
   database:
     batchSize: 200
+  join-link:
+    base-join-url: ${JOIN_LINK_BASE_URL}
   jobs:
     reset-outbox-locks:
       enabled: true
@@ -10,16 +12,16 @@ app:
       enabled: true
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/bzrspace}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASS:postgres}
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
   liquibase:
     change-log: db/changelog/changelog-master.yaml
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KC_URL:http://localhost:9999/realms/bazar-realm}
+          issuer-uri: ${KC_URL}
   threads:
     virtual:
       enabled: true
@@ -27,7 +29,7 @@ spring:
     type: caffeine
   kafka:
     enabled: true
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: bazar-space
       auto-offset-reset: earliest
@@ -40,7 +42,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     security:
-      protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
+      protocol: ${KAFKA_SECURITY_PROTOCOL}
     topics:
       producers:
         space-events:
@@ -51,7 +53,7 @@ spring:
           name: ${FILE_EVENTS_TOPIC:bazar.files.events}
           enabled: true
     properties:
-      sasl.mechanism: ${KAFKA_SASL_MECHANISM:SCRAM-SHA-512}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
       sasl.jaas.config: >
         org.apache.kafka.common.security.scram.ScramLoginModule required
         username="${KAFKA_USERNAME}"
@@ -68,13 +70,13 @@ logging:
     org:
       bazar: ${LOGGING_LEVEL:DEBUG}
 authorization:
-  port: ${BAZAR_AUTHORIZATION_PORT:9090}
-  host: ${BAZAR_AUTHORIZATION_HOST:localhost}
+  port: ${BAZAR_AUTHORIZATION_PORT}
+  host: ${BAZAR_AUTHORIZATION_HOST}
 rest:
   clients:
-    bazar-persona-url: ${BAZAR_PERSONA_API_URL:http://localhost:8081/api}
-    bazar-authz-url: ${BAZAR_AUTHORIZATION_API_URL:http://localhost:8082/api}
-    bazar-files-url: ${BAZAR_FILES_API_URL:http://localhost:8083/api}
+    bazar-persona-url: ${BAZAR_PERSONA_API_URL}
+    bazar-authz-url: ${BAZAR_AUTHORIZATION_API_URL}
+    bazar-files-url: ${BAZAR_FILES_API_URL}
 
 file-domain: bazar-space
 validation:
