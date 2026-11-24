@@ -10,15 +10,18 @@ import org.bazar.space.application.port.`in`.DeleteSpaceUseCase
 import org.bazar.space.application.port.`in`.GetSpacesUseCase
 import org.bazar.space.application.port.`in`.UpdateSpaceUseCase
 import org.bazar.space.application.space.port.`in`.GetSpaceAvatarUseCase
+import org.bazar.space.application.space.port.`in`.GetSpaceJoinCodeUseCase
 import org.bazar.space.application.space.port.`in`.InitiateSpaceAvatarUploadUseCase
 import org.bazar.space.application.space.port.out.SpaceAvatarRepositoryPort
 import org.bazar.space.application.space.query.GetSpacesQuery
 import org.bazar.space.application.shared.port.out.CurrentUserProvider
+import org.bazar.space.infrastructure.config.app.AppConfigurationProperties
 import org.bazar.space.model.AvatarUploadRequestDto
 import org.bazar.space.model.AvatarUploadTicketDtoResponse
 import org.bazar.space.model.GetSpaceAvatarsResponse
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.model.GetSpacesResponse
+import org.bazar.space.model.SpaceJoinLinkResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
@@ -32,8 +35,10 @@ class SpaceController(
     private val getSpacesUseCase: GetSpacesUseCase,
     private val initiateSpaceAvatarUploadUseCase: InitiateSpaceAvatarUploadUseCase,
     private val getSpaceAvatarUseCase: GetSpaceAvatarUseCase,
+    private val getSpaceJoinCodeUseCase: GetSpaceJoinCodeUseCase,
     private val spaceAvatarRepositoryPort: SpaceAvatarRepositoryPort,
     private val currentUser: CurrentUserProvider,
+    private val appProperties: AppConfigurationProperties,
 ) : SpaceControllerApi {
 
     override fun getAllSpaces(): ResponseEntity<GetSpacesResponse> {
@@ -83,5 +88,12 @@ class SpaceController(
     ): ResponseEntity<GetSpaceAvatarsResponse> {
         val avatars = getSpaceAvatarUseCase.execute(spaceId)
         return ResponseEntity.ok(avatars.toGetSpaceAvatarsResponse())
+    }
+
+    override fun getSpaceJoinLink(
+        @PathVariable spaceId: Long
+    ): ResponseEntity<SpaceJoinLinkResponse> {
+        val joinCode = getSpaceJoinCodeUseCase.execute(spaceId)
+        return ResponseEntity.ok(joinCode.toSpaceJoinLinkResponse(appProperties.joinLink.baseJoinUrl))
     }
 }

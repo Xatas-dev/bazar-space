@@ -10,6 +10,7 @@ import org.bazar.space.application.userspace.port.out.UserPersonaDto
 import org.bazar.space.adapter.outbound.client.GetRoleNamesResponse
 import org.bazar.space.adapter.outbound.client.BazarAuthorizationFeignClient
 import org.bazar.space.adapter.outbound.client.BazarPersonaFeignClient
+import org.bazar.space.application.shared.port.out.CurrentUserProvider
 import org.bazar.space.infrastructure.util.extension.toUri
 import org.bazar.space.model.UserInSpaceRawDto
 import org.bazar.space.utils.SpaceCreator
@@ -22,6 +23,7 @@ import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.kotlin.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.get
@@ -45,6 +47,9 @@ class SpaceMemberControllerTest : BaseWebTest() {
 
     @Autowired
     private lateinit var objectMapper: ObjectMapper
+
+    @MockitoBean
+    private lateinit var currentUserProvider: CurrentUserProvider
 
     @Disabled("Turn on when authorization will send kafka events")
     @Test
@@ -127,8 +132,9 @@ class SpaceMemberControllerTest : BaseWebTest() {
         val randomUsers = List(5) {
             userSpaceCreator.create(spaceId)
         }
-        val authenticatedUser = userSpaceCreator.create(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"), creator = true)
+        val authenticatedUser = userSpaceCreator.create(spaceId, authenticatedUserId, creator = true)
         val users = randomUsers + authenticatedUser
+        whenever(currentUserProvider.id).doReturn(authenticatedUserId)
 
         val mockPersonaResponse = List(6) { index ->
             UserPersonaDto(
@@ -197,6 +203,7 @@ class SpaceMemberControllerTest : BaseWebTest() {
         repeat(5) {
             userSpaceCreator.create(spaceId)
         }
+        whenever(currentUserProvider.id).doReturn(authenticatedUserId)
 
         //when and then
         mockMvc.get("/spaces/$spaceId/users")
@@ -211,8 +218,9 @@ class SpaceMemberControllerTest : BaseWebTest() {
     fun getUserInSpace_shouldReturnOk() {
         //given
         val spaceId = spaceCreator.create().id!!
-        userSpaceCreator.create(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
+        userSpaceCreator.create(spaceId, authenticatedUserId)
         val requestedUser = userSpaceCreator.create(spaceId, UUID.randomUUID(), true)
+        whenever(currentUserProvider.id).doReturn(authenticatedUserId)
 
         //when
         val actualResponse = mockMvc.get("/v1/spaces/$spaceId/users/${requestedUser.userId}/raw")
@@ -236,8 +244,8 @@ class SpaceMemberControllerTest : BaseWebTest() {
     fun getUserInSpace_shouldReturnOk_whenAuthenticatedUserRequestsHimself() {
         //given
         val spaceId = spaceCreator.create().id!!
-        val authenticatedUserId = UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7")
         userSpaceCreator.create(spaceId, authenticatedUserId, creator = true)
+        whenever(currentUserProvider.id).doReturn(authenticatedUserId)
 
         //when
         val actualResponse = mockMvc.get("/v1/spaces/$spaceId/users/$authenticatedUserId/raw")
@@ -261,8 +269,8 @@ class SpaceMemberControllerTest : BaseWebTest() {
     fun getUserInSpace_shouldReturn404() {
         //given
         val spaceId = spaceCreator.create().id!!
-        userSpaceCreator.create(spaceId, UUID.fromString("fd71e64e-edb2-4ecb-bc90-7f27c34e0af7"))
-
+        userSpaceCreator.create(spaceId, authenticatedUserId)
+        whenever(currentUserProvider.id).doReturn(authenticatedUserId)
         //when and then
         mockMvc.get("/v1/spaces/$spaceId/users/${UUID.randomUUID()}/raw")
             .andExpect {

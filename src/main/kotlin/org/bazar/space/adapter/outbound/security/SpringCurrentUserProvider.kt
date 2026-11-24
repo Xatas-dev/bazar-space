@@ -1,6 +1,7 @@
 package org.bazar.space.adapter.outbound.security
 
 import org.bazar.space.application.shared.port.out.CurrentUserProvider
+import org.bazar.space.domain.exception.NotAuthenticatedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
@@ -16,9 +17,9 @@ class SpringCurrentUserProvider : CurrentUserProvider {
 
     override val id: UUID
         get() = jwt?.subject?.let { UUID.fromString(it) }
-            ?: throw IllegalStateException("User ID not found in security context")
+            ?: throw NotAuthenticatedException()
 
     override val accessToken: String
         get() = jwt?.tokenValue
-            ?: throw IllegalStateException("JWT Token not found in security context")
+            ?: throw NotAuthenticatedException()
 }

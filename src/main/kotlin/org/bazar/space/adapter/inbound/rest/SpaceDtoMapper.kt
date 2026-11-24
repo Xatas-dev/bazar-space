@@ -7,6 +7,7 @@ import org.bazar.space.infrastructure.util.extension.toUri
 import org.bazar.space.model.GetSpaceDto
 import org.bazar.space.model.GetSpacesResponse
 import org.bazar.space.model.GetUsersInSpaceResponse
+import org.bazar.space.model.SpaceJoinLinkResponse
 import org.bazar.space.model.SimpleRoleDto
 import org.bazar.space.model.UserInSpaceDto
 import org.bazar.space.model.UserInSpaceRawDto
@@ -19,6 +20,9 @@ fun Space.toGetSpaceDto(avatarUrl: String? = null) = GetSpaceDto(
 
 fun List<Space>.toGetSpacesResponse(avatarUrlsBySpaceId: Map<Long, String?>) =
     GetSpacesResponse(map { it.toGetSpaceDto(avatarUrlsBySpaceId[it.id]) }.toList())
+
+fun String.toSpaceJoinLinkResponse(baseUrl: String) =
+    SpaceJoinLinkResponse(url = "${baseUrl}/$this")
 
 fun UserInSpace.toUserInSpaceDto() = UserInSpaceDto(
     userId = userId,
