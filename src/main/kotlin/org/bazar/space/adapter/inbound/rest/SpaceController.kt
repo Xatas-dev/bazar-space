@@ -14,8 +14,6 @@ import org.bazar.space.application.space.port.`in`.GetSpaceJoinCodeUseCase
 import org.bazar.space.application.space.port.`in`.GetSpacePreviewByJoinCodeUseCase
 import org.bazar.space.application.space.port.`in`.InitiateSpaceAvatarUploadUseCase
 import org.bazar.space.application.space.port.out.SpaceAvatarRepositoryPort
-import org.bazar.space.application.space.query.GetSpacesQuery
-import org.bazar.space.application.shared.port.out.CurrentUserProvider
 import org.bazar.space.infrastructure.config.app.AppConfigurationProperties
 import org.bazar.space.model.AvatarUploadRequestDto
 import org.bazar.space.model.AvatarUploadTicketDtoResponse
@@ -40,12 +38,11 @@ class SpaceController(
     private val getSpaceJoinCodeUseCase: GetSpaceJoinCodeUseCase,
     private val getSpacePreviewByJoinCodeUseCase: GetSpacePreviewByJoinCodeUseCase,
     private val spaceAvatarRepositoryPort: SpaceAvatarRepositoryPort,
-    private val currentUser: CurrentUserProvider,
     private val appProperties: AppConfigurationProperties,
 ) : SpaceControllerApi {
 
     override fun getAllSpaces(): ResponseEntity<GetSpacesResponse> {
-        val spaces = getSpacesUseCase.execute(GetSpacesQuery(currentUser.id))
+        val spaces = getSpacesUseCase.execute()
         val avatarUrlsBySpaceId = spaceAvatarRepositoryPort
             .findActiveBySpaceIds(spaces.mapNotNull { it.id })
             .associate { it.spaceId to it.url }
@@ -53,7 +50,7 @@ class SpaceController(
     }
 
     override fun createSpace(name: String): ResponseEntity<GetSpaceDto> {
-        val space = createSpaceUseCase.execute(CreateSpaceCommand(currentUser.id, name))
+        val space = createSpaceUseCase.execute(CreateSpaceCommand(name))
         return ResponseEntity.ok(space.toGetSpaceDto())
     }
 
@@ -97,7 +94,7 @@ class SpaceController(
         @PathVariable spaceId: Long
     ): ResponseEntity<SpaceJoinLinkResponse> {
         val joinCode = getSpaceJoinCodeUseCase.execute(spaceId)
-        return ResponseEntity.ok(joinCode.toSpaceJoinLinkResponse(appProperties.joinLink.baseJoinUrl))
+        return ResponseEntity.ok(joinCode.toSpaceJoinLinkResponse(appProperties.joinSpace.baseJoinUrl))
     }
 
     override fun getSpacePreviewByJoinCode(

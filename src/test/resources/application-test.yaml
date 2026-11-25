@@ -9,7 +9,7 @@ rest:
 
 
 app:
-  join-link:
+  join-space:
     base-join-url: https://bazar-space.ru/join
 spring:
   security:

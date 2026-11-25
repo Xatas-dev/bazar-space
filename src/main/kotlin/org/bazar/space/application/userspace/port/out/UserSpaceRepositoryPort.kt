@@ -13,4 +13,6 @@ interface UserSpaceRepositoryPort {
     fun deleteBySpaceIdAndUserId(spaceId: Long, userId: UUID)
 
     fun findBySpaceIdAndUserId(spaceId: Long, userId: UUID): UserSpace?
+
+    fun saveAll(userSpaces: Collection<UserSpace>)
 }

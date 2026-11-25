@@ -5,13 +5,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "app")
 data class AppConfigurationProperties(
     val database: AppDatabaseProps,
-    val joinLink: AppJoinLinkProps
+    val joinSpace: AppJoinSpaceProps
 )
 
 data class AppDatabaseProps(
     val batchSize: Int
 )
 
-data class AppJoinLinkProps(
+data class AppJoinSpaceProps(
+    /** Invite link is built as `{baseJoinUrl}/{joinCode}` */
     val baseJoinUrl: String
 )

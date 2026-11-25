@@ -24,4 +24,9 @@ class SpaceJoinRequestCreator(
             updatedAt = updatedAt,
         )
     )
+
+    fun createMany(spaceId: Long, count: Int): List<SpaceJoinRequestEntity> =
+        spaceJoinRequestEntityRepository.saveAll(
+            List(count) { SpaceJoinRequestEntity(spaceId = spaceId, userId = UUID.randomUUID()) }
+        ).toList()
 }
