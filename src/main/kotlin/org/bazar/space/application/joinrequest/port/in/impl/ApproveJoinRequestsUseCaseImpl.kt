@@ -7,8 +7,10 @@ import org.bazar.space.application.shared.buildAuthorizationCheck
 import org.bazar.space.application.shared.port.out.AppConfigProvider
 import org.bazar.space.application.shared.port.out.Authorizer
 import org.bazar.space.application.shared.port.out.TransactionRunner
+import org.bazar.space.application.space.port.out.SpaceRepositoryPort
 import org.bazar.space.application.userspace.port.out.UserSpaceRepositoryPort
 import org.bazar.space.domain.auth.Permission
+import org.bazar.space.domain.exception.SpaceNotFoundException
 import org.bazar.space.domain.joinrequest.SpaceJoinRequest
 import org.bazar.space.domain.userspace.UserSpace
 import org.springframework.stereotype.Service
@@ -19,11 +21,13 @@ class ApproveJoinRequestsUseCaseImpl(
     private val transactionRunner: TransactionRunner,
     private val appConfigProvider: AppConfigProvider,
     private val userSpaceRepositoryPort: UserSpaceRepositoryPort,
-    private val spaceJoinRequestRepositoryPort: SpaceJoinRequestRepositoryPort
+    private val spaceJoinRequestRepositoryPort: SpaceJoinRequestRepositoryPort,
+    private val spaceRepositoryPort: SpaceRepositoryPort
 ) : ApproveJoinRequestsUseCase {
 
     override fun execute(command: ApproveJoinRequestsCommand): Int {
         authorizer.authorizeOrThrow(buildAuthorizationCheck(command.spaceId, Permission.SPACE_USER_ADD))
+        spaceRepositoryPort.findById(command.spaceId) ?: throw SpaceNotFoundException(command.spaceId)
         return when (command) {
             is ApproveJoinRequestsCommand.Selected -> approveSelected(command.spaceId, command.requestIds)
             is ApproveJoinRequestsCommand.All -> approveAll(command.spaceId)

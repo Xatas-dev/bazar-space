@@ -43,6 +43,16 @@ interface SpaceJoinRequestEntityRepository :
     @Query("DELETE FROM join_request WHERE space_id = :spaceId AND id IN (:requestIds)")
     fun deleteBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): Int
 
+    @Transactional
+    @Modifying
+    @Query(
+        """
+        DELETE FROM join_request
+        WHERE id IN (SELECT id FROM join_request WHERE space_id = :spaceId ORDER BY id LIMIT :limit)
+    """
+    )
+    fun deleteBatchBySpaceId(spaceId: Long, limit: Int): Int
+
     fun findBySpaceIdAndUserId(spaceId: Long, userId: UUID): SpaceJoinRequestEntity?
 
     fun findAllBySpaceIdOrderByCreatedAt(spaceId: Long): List<SpaceJoinRequestEntity>

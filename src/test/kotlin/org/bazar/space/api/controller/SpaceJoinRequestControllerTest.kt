@@ -19,6 +19,8 @@ import org.bazar.space.model.ApproveJoinRequestsResponse
 import org.bazar.space.model.JoinRequestDto
 import org.bazar.space.model.JoinRequestUserDto
 import org.bazar.space.model.JoinRequestsPageResponse
+import org.bazar.space.model.RejectJoinRequestsRequest
+import org.bazar.space.model.RejectJoinRequestsResponse
 import org.bazar.space.model.SpaceJoinRequestResponse
 import org.bazar.space.utils.SpaceCreator
 import org.bazar.space.utils.SpaceJoinRequestCreator
@@ -39,6 +41,7 @@ import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.servlet.ResultActionsDsl
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
@@ -352,6 +355,83 @@ class SpaceJoinRequestControllerTest : BaseWebTest() {
         displayName = "$username name",
         avatarUrl = "https://cdn.bazar-space.ru/users/$userId.png"
     )
+
+    @Test
+    @DisplayName("DELETE /v1/spaces/{spaceId}/join-requests should reject selected requests")
+    fun rejectJoinRequests_selected_shouldDeleteRequests() {
+        val space = spaceCreator.create()
+        val first = spaceJoinRequestCreator.create(space.id!!)
+        val second = spaceJoinRequestCreator.create(space.id)
+        val notSelected = spaceJoinRequestCreator.create(space.id)
+
+        val response = reject(space.id, RejectJoinRequestsRequest(requestIds = listOf(first.id!!, second.id!!)))
+            .andExpect { status { isOk() } }
+            .body<RejectJoinRequestsResponse>()
+
+        assertThat(response.rejectedCount).isEqualTo(2)
+        assertThat(spaceJoinRequestEntityRepository.findAll().map { it.id }).containsExactly(notSelected.id)
+        assertThat(userSpaceEntityRepository.findAllBySpaceId(space.id)).isEmpty()
+        verify(authorizer).authorizeOrThrow(AuthorizationCheck(space.id, Permission.SPACE_USER_ADD))
+    }
+
+    @Test
+    @DisplayName("DELETE /v1/spaces/{spaceId}/join-requests should not delete request of another space")
+    fun rejectJoinRequests_requestOfAnotherSpace_shouldNotBeDeleted() {
+        val space = spaceCreator.create()
+        val otherSpace = spaceCreator.create()
+        val own = spaceJoinRequestCreator.create(space.id!!)
+        val foreign = spaceJoinRequestCreator.create(otherSpace.id!!)
+
+        val response = reject(space.id, RejectJoinRequestsRequest(requestIds = listOf(own.id!!, foreign.id!!)))
+            .andExpect { status { isOk() } }
+            .body<RejectJoinRequestsResponse>()
+
+        assertThat(response.rejectedCount).isEqualTo(1)
+        assertThat(spaceJoinRequestEntityRepository.findAll().map { it.id }).containsExactly(foreign.id)
+    }
+
+    @Test
+    @DisplayName("DELETE /v1/spaces/{spaceId}/join-requests should return 403 without space_users:ADD permission")
+    fun rejectJoinRequests_withoutPermission_shouldReturn403() {
+        val space = spaceCreator.create()
+        val request = spaceJoinRequestCreator.create(space.id!!)
+        doThrow(ForbiddenException()).whenever(authorizer).authorizeOrThrow(any())
+
+        val error = reject(space.id, RejectJoinRequestsRequest(requestIds = listOf(request.id!!)))
+            .andExpect { status { isForbidden() } }
+            .body<ApiErrorResponse>()
+
+        assertThat(error.code).isEqualTo("FORBIDDEN")
+        assertThat(spaceJoinRequestEntityRepository.findAll()).hasSize(1)
+    }
+
+    @Test
+    @DisplayName("DELETE /v1/spaces/{spaceId}/join-requests should return 400 VALIDATION_ERROR for invalid body")
+    fun rejectJoinRequests_invalidBody_shouldReturn400() {
+        val space = spaceCreator.create()
+        val request = spaceJoinRequestCreator.create(space.id!!)
+        val invalidRequests = listOf(
+            RejectJoinRequestsRequest(requestIds = null, all = null),
+            RejectJoinRequestsRequest(requestIds = listOf(request.id!!), all = true),
+            RejectJoinRequestsRequest(requestIds = null, all = false),
+        )
+
+        invalidRequests.forEach { invalidRequest ->
+            val error = reject(space.id, invalidRequest)
+                .andExpect { status { isBadRequest() } }
+                .body<ApiErrorResponse>()
+
+            assertThat(error.code).describedAs(invalidRequest.toString()).isEqualTo("VALIDATION_ERROR")
+        }
+        assertThat(spaceJoinRequestEntityRepository.findAll()).hasSize(1)
+    }
+
+    private fun reject(spaceId: Long, request: RejectJoinRequestsRequest): ResultActionsDsl =
+        mockMvc.delete("/v1/spaces/$spaceId/join-requests") {
+            accept = APPLICATION_JSON
+            contentType = APPLICATION_JSON
+            content = objectMapper.writeValueAsString(request)
+        }
 
     private fun approve(spaceId: Long, request: ApproveJoinRequestsRequest): ResultActionsDsl =
         approve(spaceId, objectMapper.writeValueAsString(request))

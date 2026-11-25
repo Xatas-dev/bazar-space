@@ -184,6 +184,42 @@ paths:
           description: FORBIDDEN - no space_users:ADD permission in the space
         "404":
           description: SPACE_NOT_FOUND
+    delete:
+      tags:
+        - space-join-request-controller
+      operationId: rejectJoinRequests
+      description: >
+        Rejects (deletes) selected join requests (requestIds) or all requests of the space (all = true).
+        Exactly one of the fields must be passed. Rejected users can submit a request again.
+        Request ids that do not belong to the space are skipped. Requires space_users:ADD permission in the space.
+      parameters:
+        - name: spaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectJoinRequestsRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/RejectJoinRequestsResponse"
+        "400":
+          description: VALIDATION_ERROR - not exactly one of requestIds / all, all is not true
+        "401":
+          description: Not authenticated
+        "403":
+          description: FORBIDDEN - no space_users:ADD permission in the space
+        "404":
+          description: SPACE_NOT_FOUND
   /v1/spaces/{spaceId}/join-requests/approve:
     post:
       tags:
@@ -219,6 +255,8 @@ paths:
           description: Not authenticated
         "403":
           description: FORBIDDEN - no space_users:ADD permission in the space
+        "404":
+          description: SPACE_NOT_FOUND
   /v1/spaces/by-code/{code}/join-requests:
     post:
       tags:
@@ -541,6 +579,29 @@ components:
           type: string
         avatarUrl:
           type: string
+
+    RejectJoinRequestsRequest:
+      description: Exactly one of requestIds / all must be passed
+      type: object
+      properties:
+        requestIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: Ids of join requests to reject
+        all:
+          type: boolean
+          description: Reject all join requests of the space, only true is allowed
+
+    RejectJoinRequestsResponse:
+      type: object
+      required:
+        - rejectedCount
+      properties:
+        rejectedCount:
+          type: integer
+          description: Number of rejected (deleted) join requests
 
     SpaceJoinRequestResponse:
       type: object
