@@ -6,11 +6,9 @@ import org.bazar.space.domain.auth.AuthorizationCheck
 import org.bazar.space.application.shared.port.out.Authorizer
 import org.bazar.space.application.shared.port.out.CurrentUserProvider
 import org.bazar.space.domain.exception.ForbiddenException
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 @Service
-@Profile("!local && !test")
 class AuthorizerAdapter(
     private val bazarAuthzClient: BazarAuthorizationClient,
     private val currentUser: CurrentUserProvider

@@ -5,6 +5,7 @@ import org.bazar.space.domain.exception.ForbiddenException
 import org.bazar.space.domain.exception.InvalidAvatarFileExtensionException
 import org.bazar.space.domain.exception.InvalidAvatarFileTypeException
 import org.bazar.space.domain.exception.InvalidAvatarSizeException
+import org.bazar.space.domain.exception.InvalidRequestException
 import org.bazar.space.domain.exception.NotAuthenticatedException
 import org.bazar.space.domain.exception.SpaceAvatarNotFoundException
 import org.bazar.space.domain.exception.SpaceNotFoundException
@@ -36,6 +37,9 @@ fun DomainException.toHttpError(): HttpError = when (this) {
 
     is InvalidAvatarFileTypeException ->
         httpError(HttpStatus.BAD_REQUEST, "INVALID_AVATAR_FILE_TYPE", "Неподдерживаемый тип файла $fileType")
+
+    is InvalidRequestException ->
+        httpError(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Ошибка валидации")
 
     is InvalidAvatarSizeException ->
         httpError(HttpStatus.BAD_REQUEST, "INVALID_AVATAR_SIZE", "Размер файла слишком большой")

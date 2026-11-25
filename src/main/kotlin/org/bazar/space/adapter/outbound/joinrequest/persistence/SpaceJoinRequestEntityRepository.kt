@@ -1,5 +1,6 @@
 package org.bazar.space.adapter.outbound.joinrequest.persistence
 
+import org.springframework.data.jdbc.repository.query.Modifying
 import org.springframework.data.jdbc.repository.query.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
@@ -24,6 +25,16 @@ interface SpaceJoinRequestEntityRepository : CrudRepository<SpaceJoinRequestEnti
     """
     )
     fun save(@Param("entity") entity: SpaceJoinRequestEntity): SpaceJoinRequestEntity
+
+    @Query("SELECT * FROM join_request WHERE space_id = :spaceId ORDER BY id LIMIT :limit")
+    fun findBySpaceId(spaceId: Long, limit: Int): List<SpaceJoinRequestEntity>
+
+    fun findAllBySpaceIdAndIdIn(spaceId: Long, ids: Collection<Long>): List<SpaceJoinRequestEntity>
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM join_request WHERE space_id = :spaceId AND id IN (:requestIds)")
+    fun deleteBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): Int
 
     fun findBySpaceIdAndUserId(spaceId: Long, userId: UUID): SpaceJoinRequestEntity?
 

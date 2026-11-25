@@ -8,5 +8,11 @@ interface SpaceJoinRequestRepositoryPort {
 
     fun findAllBySpaceId(spaceId: Long): List<SpaceJoinRequest>
 
+    fun findBySpaceId(spaceId: Long, limit: Int): List<SpaceJoinRequest>
+
+    fun findAllBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): List<SpaceJoinRequest>
+
+    fun deleteBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): Int
+
     fun deleteBySpaceIdAndUserId(spaceId: Long, userId: UUID)
 }

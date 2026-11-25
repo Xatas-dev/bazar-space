@@ -7,7 +7,8 @@ import java.util.*
 
 @Repository
 class UserSpaceRepositoryAdapter(
-    private val userSpaceEntityRepository: UserSpaceEntityRepository
+    private val userSpaceEntityRepository: UserSpaceEntityRepository,
+    private val userSpaceJdbcRepository: UserSpaceJdbcRepository
 ) : UserSpaceRepositoryPort {
 
     override fun save(userSpace: UserSpace): UserSpace =
@@ -26,4 +27,8 @@ class UserSpaceRepositoryAdapter(
 
     override fun findBySpaceIdAndUserId(spaceId: Long, userId: UUID): UserSpace? =
         userSpaceEntityRepository.findBySpaceIdAndUserId(spaceId, userId).orElse(null)?.toDomain()
+
+    override fun saveAll(userSpaces: Collection<UserSpace>) {
+        userSpaceJdbcRepository.insertAllIgnoringExisting(userSpaces.map { it.toEntity() })
+    }
 }

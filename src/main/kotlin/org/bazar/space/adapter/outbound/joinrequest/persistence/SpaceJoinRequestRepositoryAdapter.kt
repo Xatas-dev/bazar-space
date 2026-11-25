@@ -16,6 +16,16 @@ class SpaceJoinRequestRepositoryAdapter(
     override fun findAllBySpaceId(spaceId: Long): List<SpaceJoinRequest> =
         spaceJoinRequestEntityRepository.findAllBySpaceIdOrderByCreatedAt(spaceId).map { it.toDomain() }
 
+    override fun findBySpaceId(spaceId: Long, limit: Int): List<SpaceJoinRequest> =
+        spaceJoinRequestEntityRepository.findBySpaceId(spaceId, limit).map { it.toDomain() }
+
+    override fun findAllBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): List<SpaceJoinRequest> =
+        if (requestIds.isEmpty()) emptyList()
+        else spaceJoinRequestEntityRepository.findAllBySpaceIdAndIdIn(spaceId, requestIds).map { it.toDomain() }
+
+    override fun deleteBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): Int =
+        if (requestIds.isEmpty()) 0 else spaceJoinRequestEntityRepository.deleteBySpaceIdAndIds(spaceId, requestIds)
+
     override fun deleteBySpaceIdAndUserId(spaceId: Long, userId: UUID) {
         spaceJoinRequestEntityRepository.deleteBySpaceIdAndUserId(spaceId, userId)
     }

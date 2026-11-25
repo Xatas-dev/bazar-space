@@ -1,7 +1,7 @@
 app:
   database:
     batchSize: 200
-  join-link:
+  join-space:
     base-join-url: ${JOIN_LINK_BASE_URL}
   jobs:
     reset-outbox-locks:

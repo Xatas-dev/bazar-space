@@ -140,6 +140,41 @@ paths:
                 $ref: "#/components/schemas/SpacePreviewResponse"
         "404":
           description: SPACE_NOT_FOUND - no space with such join code
+  /v1/spaces/{spaceId}/join-requests/approve:
+    post:
+      tags:
+        - space-join-request-controller
+      operationId: approveJoinRequests
+      description: >
+        Approves selected join requests (requestIds) or all requests of the space (all = true).
+        Exactly one of the fields must be passed. Approved users become space members with the default role.
+        Request ids that do not belong to the space are skipped. Requires space_users:ADD permission in the space.
+      parameters:
+        - name: spaceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveJoinRequestsRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/ApproveJoinRequestsResponse"
+        "400":
+          description: VALIDATION_ERROR - not exactly one of requestIds / all, requestIds is empty, all is not true
+        "401":
+          description: Not authenticated
+        "403":
+          description: FORBIDDEN - no space_users:ADD permission in the space
   /v1/spaces/by-code/{code}/join-requests:
     post:
       tags:
@@ -385,15 +420,35 @@ components:
           type: string
           description: URL of the currently active space avatar
 
+    ApproveJoinRequestsRequest:
+      description: Exactly one of requestIds / all must be passed
+      type: object
+      properties:
+        requestIds:
+          type: array
+          minItems: 1
+          items:
+            type: integer
+            format: int64
+          description: Ids of join requests to approve
+        all:
+          type: boolean
+          description: Approve all join requests of the space, only true is allowed
+
+    ApproveJoinRequestsResponse:
+      type: object
+      required:
+        - approvedCount
+      properties:
+        approvedCount:
+          type: integer
+          description: Number of approved join requests
+
     SpaceJoinRequestResponse:
       type: object
       required:
-        - id
         - createdAt
       properties:
-        id:
-          type: integer
-          format: int64
         createdAt:
           type: string
           format: date-time

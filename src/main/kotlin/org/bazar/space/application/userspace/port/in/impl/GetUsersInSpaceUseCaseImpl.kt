@@ -1,6 +1,7 @@
 package org.bazar.space.application.userspace.port.`in`.impl
 
 import org.bazar.space.application.port.`in`.GetUsersInSpaceUseCase
+import org.bazar.space.application.shared.port.out.CurrentUserProvider
 import org.bazar.space.application.userspace.query.GetUsersInSpaceQuery
 import org.bazar.space.domain.space.SpaceMembership
 import org.bazar.space.application.userspace.RoleInfo
@@ -14,12 +15,13 @@ import org.springframework.stereotype.Service
 class GetUsersInSpaceUseCaseImpl(
     private val userSpaceRepositoryPort: UserSpaceRepositoryPort,
     private val userInfoProvider: UserInfoProvider,
-    private val roleInfoProvider: RoleInfoProvider
+    private val roleInfoProvider: RoleInfoProvider,
+    private val currentUser: CurrentUserProvider
 ) : GetUsersInSpaceUseCase {
 
     override fun execute(query: GetUsersInSpaceQuery): List<UserInSpace> {
         val members = userSpaceRepositoryPort.findAllBySpaceId(query.spaceId)
-        SpaceMembership.ensureUserIsMember(members, query.authenticatedUserId)
+        SpaceMembership.ensureUserIsMember(members, currentUser.id)
 
         val userIds = members.map { it.userId }
         val userIdToUserInfoMap = userInfoProvider.getUsersByIds(userIds)
