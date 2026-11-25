@@ -40,6 +40,9 @@ class SpaceJoinRequestRepositoryAdapter(
     override fun deleteBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): Int =
         if (requestIds.isEmpty()) 0 else spaceJoinRequestEntityRepository.deleteBySpaceIdAndIds(spaceId, requestIds)
 
+    override fun deleteBatchBySpaceId(spaceId: Long, limit: Int): Int =
+        spaceJoinRequestEntityRepository.deleteBatchBySpaceId(spaceId, limit)
+
     override fun deleteBySpaceIdAndUserId(spaceId: Long, userId: UUID) {
         spaceJoinRequestEntityRepository.deleteBySpaceIdAndUserId(spaceId, userId)
     }

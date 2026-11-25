@@ -17,5 +17,7 @@ interface SpaceJoinRequestRepositoryPort {
 
     fun deleteBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): Int
 
+    fun deleteBatchBySpaceId(spaceId: Long, limit: Int): Int
+
     fun deleteBySpaceIdAndUserId(spaceId: Long, userId: UUID)
 }
