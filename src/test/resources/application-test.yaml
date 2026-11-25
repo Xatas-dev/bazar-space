@@ -18,6 +18,9 @@ spring:
         jwt:
           issuer-uri: localhost:8090
   kafka:
+    properties:
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="test" password="test";
     security:
       protocol: PLAINTEXT
       consumers:
