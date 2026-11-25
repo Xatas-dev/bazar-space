@@ -1,7 +1,10 @@
 package org.bazar.space.adapter.outbound.joinrequest.persistence
 
 import org.bazar.space.application.joinrequest.port.out.SpaceJoinRequestRepositoryPort
+import org.bazar.space.application.shared.PageResult
 import org.bazar.space.domain.joinrequest.SpaceJoinRequest
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
@@ -18,6 +21,17 @@ class SpaceJoinRequestRepositoryAdapter(
 
     override fun findBySpaceId(spaceId: Long, limit: Int): List<SpaceJoinRequest> =
         spaceJoinRequestEntityRepository.findBySpaceId(spaceId, limit).map { it.toDomain() }
+
+    override fun findPageBySpaceId(spaceId: Long, page: Int, size: Int): PageResult<SpaceJoinRequest> {
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")))
+        val result = spaceJoinRequestEntityRepository.findAllBySpaceId(spaceId, pageable)
+        return PageResult(
+            items = result.content.map { it.toDomain() },
+            page = result.number,
+            size = result.size,
+            total = result.totalElements
+        )
+    }
 
     override fun findAllBySpaceIdAndIds(spaceId: Long, requestIds: Collection<Long>): List<SpaceJoinRequest> =
         if (requestIds.isEmpty()) emptyList()

@@ -3,17 +3,22 @@ package org.bazar.space.api.controller
 import org.assertj.core.api.Assertions.assertThat
 import org.bazar.space.BaseWebTest
 import org.bazar.space.adapter.inbound.rest.error.ApiErrorResponse
+import org.bazar.space.adapter.outbound.client.BazarPersonaFeignClient
 import org.bazar.space.adapter.outbound.joinrequest.persistence.SpaceJoinRequestEntityRepository
 import org.bazar.space.adapter.outbound.userspace.persistence.UserSpaceEntityRepository
 import org.bazar.space.application.joinrequest.port.out.SpaceJoinRequestRepositoryPort
 import org.bazar.space.application.shared.port.out.CurrentUserProvider
+import org.bazar.space.application.userspace.port.out.UserPersonaDto
 import org.bazar.space.domain.auth.AuthorizationCheck
 import org.bazar.space.domain.auth.Permission
 import org.bazar.space.domain.exception.ForbiddenException
-import org.bazar.space.infrastructure.config.app.AppConfigurationProperties
 import org.bazar.space.domain.exception.NotAuthenticatedException
+import org.bazar.space.infrastructure.config.app.AppConfigurationProperties
 import org.bazar.space.model.ApproveJoinRequestsRequest
 import org.bazar.space.model.ApproveJoinRequestsResponse
+import org.bazar.space.model.JoinRequestDto
+import org.bazar.space.model.JoinRequestUserDto
+import org.bazar.space.model.JoinRequestsPageResponse
 import org.bazar.space.model.SpaceJoinRequestResponse
 import org.bazar.space.utils.SpaceCreator
 import org.bazar.space.utils.SpaceJoinRequestCreator
@@ -21,8 +26,11 @@ import org.bazar.space.utils.UserSpaceCreator
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
@@ -31,6 +39,7 @@ import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.servlet.ResultActionsDsl
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import tools.jackson.databind.ObjectMapper
 import java.time.Instant
@@ -66,6 +75,9 @@ class SpaceJoinRequestControllerTest : BaseWebTest() {
 
     @MockitoSpyBean
     lateinit var spaceJoinRequestRepositoryPort: SpaceJoinRequestRepositoryPort
+
+    @MockitoBean
+    lateinit var bazarPersonaFeignClient: BazarPersonaFeignClient
 
     @Test
     @DisplayName("POST /v1/spaces/by-code/{code}/join-requests should create join request for current user")
@@ -242,6 +254,104 @@ class SpaceJoinRequestControllerTest : BaseWebTest() {
         assertThat(spaceJoinRequestEntityRepository.findAll()).hasSize(1)
     }
 
+
+    @Test
+    @DisplayName("GET /v1/spaces/{spaceId}/join-requests should return requests with user info, newest first")
+    fun getJoinRequests_shouldReturnRequestsWithUsersNewestFirst() {
+        val space = spaceCreator.create()
+        val now = Instant.now().truncatedTo(ChronoUnit.MICROS)
+        val older = spaceJoinRequestCreator.create(space.id!!, createdAt = now.minusSeconds(60))
+        val newer = spaceJoinRequestCreator.create(space.id, createdAt = now)
+        spaceJoinRequestCreator.create(spaceCreator.create().id!!)
+        whenever(bazarPersonaFeignClient.getUsersByIds(any())).thenReturn(
+            listOf(persona(older.userId, "ivan.petrov"), persona(newer.userId, "anna.ivanova"))
+        )
+
+        val response = getJoinRequests(space.id)
+            .andExpect { status { isOk() } }
+            .body<JoinRequestsPageResponse>()
+
+        assertThat(response.page).isZero()
+        assertThat(response.propertySize).isEqualTo(20)
+        assertThat(response.total).isEqualTo(2)
+        assertThat(response.items).containsExactly(
+            JoinRequestDto(
+                id = newer.id!!,
+                user = JoinRequestUserDto(
+                    userId = newer.userId,
+                    username = "anna.ivanova",
+                    displayName = "anna.ivanova name",
+                    avatarUrl = "https://cdn.bazar-space.ru/users/${newer.userId}.png"
+                ),
+                createdAt = newer.createdAt
+            ),
+            JoinRequestDto(
+                id = older.id!!,
+                user = JoinRequestUserDto(
+                    userId = older.userId,
+                    username = "ivan.petrov",
+                    displayName = "ivan.petrov name",
+                    avatarUrl = "https://cdn.bazar-space.ru/users/${older.userId}.png"
+                ),
+                createdAt = older.createdAt
+            ),
+        )
+        verify(authorizer).authorizeOrThrow(AuthorizationCheck(space.id, Permission.SPACE_USER_ADD))
+        verify(bazarPersonaFeignClient, times(1)).getUsersByIds(any())
+    }
+
+    @Test
+    @DisplayName("GET /v1/spaces/{spaceId}/join-requests should return only user id when user service has no data")
+    fun getJoinRequests_userServiceWithoutUser_shouldReturnUserIdOnly() {
+        val space = spaceCreator.create()
+        val request = spaceJoinRequestCreator.create(space.id!!)
+        whenever(bazarPersonaFeignClient.getUsersByIds(any())).thenReturn(emptyList())
+
+        val response = getJoinRequests(space.id)
+            .andExpect { status { isOk() } }
+            .body<JoinRequestsPageResponse>()
+
+        assertThat(response.items.single().user).isEqualTo(JoinRequestUserDto(userId = request.userId))
+    }
+
+    @Test
+    @DisplayName("GET /v1/spaces/{spaceId}/join-requests should return 404 SPACE_NOT_FOUND for unknown space")
+    fun getJoinRequests_unknownSpace_shouldReturn404() {
+        val error = getJoinRequests(Long.MAX_VALUE)
+            .andExpect { status { isNotFound() } }
+            .body<ApiErrorResponse>()
+
+        assertThat(error.code).isEqualTo("SPACE_NOT_FOUND")
+    }
+
+    @Test
+    @DisplayName("GET /v1/spaces/{spaceId}/join-requests should return 403 without space_users:ADD permission")
+    fun getJoinRequests_withoutPermission_shouldReturn403() {
+        val space = spaceCreator.create()
+        spaceJoinRequestCreator.create(space.id!!)
+        doThrow(ForbiddenException()).whenever(authorizer).authorizeOrThrow(any())
+
+        val error = getJoinRequests(space.id)
+            .andExpect { status { isForbidden() } }
+            .body<ApiErrorResponse>()
+
+        assertThat(error.code).isEqualTo("FORBIDDEN")
+        verifyNoInteractions(bazarPersonaFeignClient)
+    }
+
+    private fun getJoinRequests(spaceId: Long, page: Int? = null, size: Int? = null): ResultActionsDsl =
+        mockMvc.get("/v1/spaces/$spaceId/join-requests") {
+            accept = APPLICATION_JSON
+            page?.let { param("page", it.toString()) }
+            size?.let { param("size", it.toString()) }
+        }
+
+    private fun persona(userId: UUID, username: String) = UserPersonaDto(
+        id = userId,
+        username = username,
+        displayName = "$username name",
+        avatarUrl = "https://cdn.bazar-space.ru/users/$userId.png"
+    )
 
     private fun approve(spaceId: Long, request: ApproveJoinRequestsRequest): ResultActionsDsl =
         approve(spaceId, objectMapper.writeValueAsString(request))
